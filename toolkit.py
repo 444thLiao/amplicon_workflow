@@ -16,12 +16,15 @@ def run_cmd(cmd, dry_run=False, log_file=None, **kwargs):
     else:
         outstream = log_file
 
+    executable = "/usr/bin/zsh"
+    if not os.path.exists(executable):
+        executable = "/bin/bash"
     print(cmd, file=outstream)
     outstream.flush()
     if not dry_run:
         check_call(cmd,
                    shell=True,
-                   executable="/usr/bin/zsh",
+                   executable=executable,
                    stdout=outstream,
                    stderr=outstream,
                    **kwargs)

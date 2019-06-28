@@ -1,21 +1,19 @@
-from os.path import dirname,join,basename,isfile,abspath
 import sys
+from os.path import dirname, join
 
-sys.path.insert(0, dirname(__file__))
-from utils import assign_work_pool, get_files, write_manifest
-from subprocess import check_call
+sys.path.insert(0, dirname(dirname(__file__)))
+from static.utils import assign_work_pool
 import pandas as pd
 
-from pipelines.demux import main as demux_main
 from config.default_params import *
 from config import soft_db_path
 from toolkit import run_cmd
-import re, string
 
 
 def cal(args):
     func, args = args
     return func(*args)
+
 
 def join_pairs(manifest,
                n_thread,
@@ -99,51 +97,50 @@ def _join_pairs_w_command_output(fwd_fp,
         cmd += ['--fastq_maxee', str(maxee)]
     if allowmergestagger:
         cmd.append('--fastq_allowmergestagger')
-    run_cmd(' '.join(cmd),dry_run=False,log_file=log_file)
-    run_cmd(' '.join(['gzip', '-f',fastq_out]),dry_run=False,log_file=log_file)
+    run_cmd(' '.join(cmd), dry_run=False, log_file=log_file)
+    run_cmd(' '.join(['gzip', '-f', fastq_out]), dry_run=False, log_file=log_file)
 
+# if __name__ == '__main__':
+#     from utils import parse_param
+#     import argparse
+#
+#     parser = argparse.ArgumentParser()
+#     parser.add_argument("-p", "--parameter",
+#                         help="input file contains all parameters, template is place at the %s. This is a python script actually, so just use python code to write your code." % join(
+#                             dirname(abspath(__file__)), 'param.template'), default=join(dirname(__file__), 'param.template'))
+#     parser.add_argument("-nt", "--num_thread",
+#                         help="thread")
+#
+#     args = parser.parse_args()
+#     parameter_f = args.parameter
+#     nt = args.num_thread
+#     parse_param(parameter_f, g=globals())
+#
+#     r1_files = sorted(get_files(indir, r1_format))
+#     r2_files = sorted(get_files(indir, r2_format))
+#     ids = [re.findall(idpattern, basename(_))[0].strip(string.punctuation) for _ in r1_files]
+#
+#     if demux_on:
+#         print("Demux is on, first start the demultiplexing process.")
+#         demux_dict['seqfile1'] = r1_files
+#         demux_dict['seqfile2'] = r2_files
+#         if not_overwrite_demux and isfile(demux_stats):
+#             print('demuxed files exist, pass it')
+#         else:
+#             r1_files, r2_files, ids, stats = demux_main(**demux_dict)
+#             stats_df = pd.DataFrame.from_dict(stats, orient='index')
+#             stats_df.loc[:, 'remaining reads/%'] = stats_df.loc[:, "remaining reads"] / stats_df.iloc[:, 1:4].sum(1)
+#             stats_df.to_csv(demux_stats, index=True)
+#         print("demultiplexing has been complete, indir will change to", demux_dir_samples)
+#     if not isfile(opath):
+#         write_manifest(opath=opath,
+#                        ids=ids,
+#                        r1_files=r1_files,
+#                        r2_files=r2_files, )
+#
+#     os.makedirs(odir, exist_ok=True)
+#     ## 跑命令
+#     join_pairs(opath, int(nt), **join_params)
+#     print("预处理完成,完成原始序列评估 与 joined, 去污染,去chimera,fix orientation")
 
-if __name__ == '__main__':
-    from utils import parse_param
-    import argparse
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-p", "--parameter",
-                        help="input file contains all parameters, template is place at the %s. This is a python script actually, so just use python code to write your code." % join(
-                            dirname(abspath(__file__)), 'param.template'), default=join(dirname(__file__), 'param.template'))
-    parser.add_argument("-nt", "--num_thread",
-                        help="thread")
-
-    args = parser.parse_args()
-    parameter_f = args.parameter
-    nt = args.num_thread
-    parse_param(parameter_f, g=globals())
-
-    r1_files = sorted(get_files(indir, r1_format))
-    r2_files = sorted(get_files(indir, r2_format))
-    ids = [re.findall(idpattern, basename(_))[0].strip(string.punctuation) for _ in r1_files]
-
-    if demux_on:
-        print("Demux is on, first start the demultiplexing process.")
-        demux_dict['seqfile1'] = r1_files
-        demux_dict['seqfile2'] = r2_files
-        if not_overwrite_demux and isfile(demux_stats):
-            print('demuxed files exist, pass it')
-        else:
-            r1_files, r2_files, ids, stats = demux_main(**demux_dict)
-            stats_df = pd.DataFrame.from_dict(stats, orient='index')
-            stats_df.loc[:, 'remaining reads/%'] = stats_df.loc[:, "remaining reads"] / stats_df.iloc[:, 1:4].sum(1)
-            stats_df.to_csv(demux_stats, index=True)
-        print("demultiplexing has been complete, indir will change to", demux_dir_samples)
-    if not isfile(opath):
-        write_manifest(opath=opath,
-                       ids=ids,
-                       r1_files=r1_files,
-                       r2_files=r2_files, )
-
-    os.makedirs(odir, exist_ok=True)
-    ## 跑命令
-    join_pairs(opath, int(nt), **join_params)
-    print("预处理完成,完成原始序列评估 与 joined, 去污染,去chimera,fix orientation")
-
-    # python3 /home/liaoth/data2/16s/qiime2_learn/gpz_16s_pipelines/preprocessing/join_pairs.py -p '/home/liaoth/data2/16s/shanghai_152/param.template' -nt 5
+# python3 /home/liaoth/data2/16s/qiime2_learn/gpz_16s_pipelines/preprocessing/join_pairs.py -p '/home/liaoth/data2/16s/shanghai_152/param.template' -nt 5

@@ -2,7 +2,7 @@ import luigi
 from tasks import base_luigi_task
 from os.path import dirname,join
 from config import soft_db_path
-from luigi_workflow.toolkit import run_cmd,valid_path
+from toolkit import run_cmd,valid_path
 
 class get_tree(base_luigi_task):
     analysis_type = luigi.Parameter(default="otu")

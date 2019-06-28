@@ -1,5 +1,5 @@
 import luigi
-from luigi_workflow.toolkit import run_cmd
+from toolkit import run_cmd
 
 class base_luigi_task(luigi.Task):
     odir = luigi.Parameter()

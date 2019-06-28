@@ -22,6 +22,16 @@ root_tree_path = 'rep_rooted_tree.tab'
 tax_tab = 'rep_sintax.tab'
 
 ############################################################
+# demux部分
+demux_on = False
+not_overwrite_demux = True
+id_col = 'SampleID'
+fb_col = 'Forward_Barcode'
+rb_col = 'Reverse_Barcode'
+fp_col = 'Forward_Primer'
+rp_col = 'Reverse_Primer'
+
+############################################################
 trimmomatic_thread = 5
 fq_screen_thread = 5
 # ################

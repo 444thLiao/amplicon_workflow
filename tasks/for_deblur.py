@@ -8,7 +8,7 @@ from config import soft_db_path
 from tasks.basic_tasks import base_luigi_task,tabulate_seq,visulize_seq
 from toolkit import run_cmd, valid_path
 import config.default_params as config
-from luigi_workflow.static.q2_function import convert2otutab, convert2seq,convert2table
+from static.q2_function import convert2otutab, convert2seq,convert2table
 
 
 vsearch = soft_db_path.vsearch_pth

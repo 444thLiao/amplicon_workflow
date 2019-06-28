@@ -1,10 +1,10 @@
 import re
 import string
 
-from config.default_params import *
-from pipelines.demux import main as demux_main
-from pipelines.pipelines import selective_p, tax_assign_qiime2, g_tree
-from utils import *
+import config.default_params as config
+from static.toolkit.demux import main as demux_main
+from static.pipelines.pipelines import selective_p, tax_assign_qiime2, g_tree
+from static.utils import *
 
 
 def preprocess(indir):
