@@ -1,10 +1,10 @@
 import sys
-from os.path import dirname
+from os.path import dirname,abspath
 
 sys.path.insert(0, dirname(__file__))
 import luigi
 import click
-from toolkit import run_cmd
+from toolkit import run_cmd,get_dir_path
 
 
 
@@ -22,7 +22,7 @@ def run(cmd):
 @cli.command(help="analysis with test dataset, need to assign a output directory.")
 @click.option("-o", "--odir", help="output directory for testing ...")
 def testdata(odir):
-    project_root_path = dirname(__file__)
+    project_root_path = get_dir_path(__file__,1)
     run_cmd(
         f"python3 {project_root_path}/main.py run -- workflow --tab {project_root_path}/testset/seq_data/data_input.tsv --odir {odir} --analysis-type otu --workers 4 --log-path {odir}/cmd_log.txt",
         dry_run=False)

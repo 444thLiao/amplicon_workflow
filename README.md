@@ -1,26 +1,59 @@
-## 16s pipelines based on luigi
+# 16s pipelines based on luigi
 
 For better handle different pipelines with vsearch/usearch, qiime2-deblur or qiime2-dada2.
 We present a unified pipelines which you could perforom different analysis with **single data_input.tab**
 
 
-## installation
+# installation
 
+### qiime2
 Because this pipelines are embed with qiime2 pipelines, it is better to install a qiime2 environment.
 
 Just follow the official instruction [qiime2](https://qiime2.org/)
-Beside install the qiime2, this project also have some external library need to install.
+like that :
+```bash
+wget https://data.qiime2.org/distro/core/qiime2-2019.4-py36-linux-conda.yml
+conda env create -n qiime2-2019.4 --file qiime2-2019.4-py36-linux-conda.yml
+```
 
+### vsearch
 
+Just follow the official instruction [vsearch](https://github.com/torognes/vsearch)
+like that :
+```bash
+git clone https://github.com/torognes/vsearch.git
+cd vsearch
+./autogen.sh
+./configure
+make
+make install # (optional)  # as root or sudo make install
+```
 
+### script requires
+Requirements could follow `requirements.txt`
 
-## testing
+Using `pip install -r requirements.txt`
+
+or install its inside the environment of qiime2 
+```bash
+source active qiime2-2019.4
+pip install -r requirements.txt
+``` 
+
+### conf
+there are multiple config file need to be adjusted.
+
+* conf of pipelines: `config/soft_db_path.py` 
+* conf of fastq_screen db: `dir_of_fastq_screen/fastq_screen.conf`
+* 
+
+# testing
 
 Within environment of qiime2 (if you don't want to perform qiime2 relative analysis pipelines), you could ignore this.
 
 Just type:
 
-```python
+```bash
 python3 main.py testdata -o ~/temp/16s_testdata
 ``` 
 
@@ -37,7 +70,7 @@ Following the header and separator of `config.data_input.template`, fulfill a ne
 
 With this tab, you could run:
 
-```python
+```bash
 python3 main.py run -- workflow --tab data_input.tab --odir output_dir --analysis-type otu --workers 4 --log-path output_dir/cmd_log.txt
 ``` 
 

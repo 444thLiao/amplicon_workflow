@@ -62,3 +62,11 @@ def valid_path(in_pth,
             if not os.path.isdir(odir_file):
                 os.makedirs(odir_file, exist_ok=True)
     return True
+
+def get_dir_path(path,num=1):
+    path = os.path.abspath(os.path.realpath(path))
+    for _ in range(num):
+        path = os.path.dirname(path)
+    if path == "/":
+        raise Exception("reach root path....")
+    return path

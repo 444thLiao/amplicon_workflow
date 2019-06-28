@@ -67,7 +67,8 @@ join_params = dict(
     qmin=0,
     qminout=0,
     qmax=41,
-    qmaxout=41
+    qmaxout=41,
+    qascii=33
 )
 # join 序列评估
 qc_joined_params = dict(
