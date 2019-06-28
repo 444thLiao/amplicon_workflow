@@ -16,13 +16,14 @@ wget https://data.qiime2.org/distro/core/qiime2-2019.4-py36-linux-conda.yml
 conda env create -n qiime2-2019.4 --file qiime2-2019.4-py36-linux-conda.yml
 ```
 
-### vsearch
+### vsearch == 2.6.2
 
 Just follow the official instruction [vsearch](https://github.com/torognes/vsearch)
 like that :
 ```bash
-git clone https://github.com/torognes/vsearch.git
-cd vsearch
+wget https://github.com/torognes/vsearch/archive/v2.6.2.tar.gz
+tar xzf v2.6.2.tar.gz
+cd vsearch-2.6.2
 ./autogen.sh
 ./configure
 make
@@ -45,7 +46,6 @@ there are multiple config file need to be adjusted.
 
 * conf of pipelines: `config/soft_db_path.py` 
 * conf of fastq_screen db: `dir_of_fastq_screen/fastq_screen.conf`
-* 
 
 # testing
 
