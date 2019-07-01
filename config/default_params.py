@@ -1,6 +1,6 @@
 # 输入
 import os
-qiime2_p = "source activate qiime2-2019.1; qiime "
+qiime2_p = "source activate qiime2-2019.4; qiime "
 
 ############################################################
 # 输出文件名集合
@@ -68,7 +68,7 @@ join_params = dict(
     qminout=0,
     qmax=41,
     qmaxout=41,
-    qascii=33
+    #qascii=33
 )
 # join 序列评估
 qc_joined_params = dict(

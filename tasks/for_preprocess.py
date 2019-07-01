@@ -344,7 +344,7 @@ class import_data(base_luigi_task):
             collect_params["r1_files"].append(r1_path)
             collect_params["r2_files"].append(r2_path)
 
-        from luigi_workflow.static.utils import write_manifest
+        from static.utils import write_manifest
         opath = self.output().path.replace('.qza','')
         write_manifest(opath=opath,
                        **collect_params)

@@ -23,12 +23,12 @@ Of course, you could also change the default setting at `config/default_params.p
 
 #### usage 
 
-```python
+```bash
 python3 static/toolkit/demux.py --help
 ```
 see help documentation of demux.py
 
-```python
+```bash
 python3 static/toolkit/demux.py -m metadata.tsv -o output_directory -r1 "path_of_R1" -r2 "path_of_R2" -f -p 5
 ```
 
@@ -44,7 +44,7 @@ For join `static\toolkit\demux.py` and `main.py`, of course it will generate a i
 
 #### test set
 
-```python
+```bash
 python3 static/toolkit/demux.py -m testset/seq_data2/metadata.tab -o ~/test_demux/ -r1 "testset/seq_data2/*_1.fastq.gz" -r2 "testset/seq_data2/*_2.fastq.gz" -f -p 5
 ```
 

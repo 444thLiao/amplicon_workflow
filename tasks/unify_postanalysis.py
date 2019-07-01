@@ -32,9 +32,11 @@ class get_tree(base_luigi_task):
         ofiles = []
         for k, f in self.input().items():
             odir = dirname(f[1].path)
-            ofiles.append(join(odir,"rep.tree"))
+            ofiles.append(join(odir,
+                               "rep.tree"))
         valid_path(ofiles,check_ofile=1)
-        return [luigi.LocalTarget(_) for _ in ofiles]
+        return [luigi.LocalTarget(_)
+                for _ in ofiles]
 
 
     def run(self):

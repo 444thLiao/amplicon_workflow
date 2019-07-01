@@ -24,7 +24,7 @@ def run(cmd):
 def testdata(odir):
     project_root_path = get_dir_path(__file__,1)
     run_cmd(
-        f"python3 {project_root_path}/main.py run -- workflow --tab {project_root_path}/testset/seq_data/data_input.tsv --odir {odir} --analysis-type otu --workers 4 --log-path {odir}/cmd_log.txt",
+        f"python3 {project_root_path}/main.py run -- workflow --tab {project_root_path}/testset/seq_data/data_input.tsv --odir {odir} --analysis-type all --workers 4 --log-path {odir}/cmd_log.txt",
         dry_run=False)
 
 
