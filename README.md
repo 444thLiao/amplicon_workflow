@@ -54,10 +54,13 @@ Within environment of qiime2 (if you don't want to perform qiime2 relative analy
 Just type:
 
 ```bash
-python3 main.py testdata -o ~/temp/16s_testdata
+source activate qiime2-2019.4
+python3 main.py test -o ~/temp/16s_testdata --local-scheduler
 ``` 
 
-It will run otu relative pipelines with testing data contained at **testset** directory.
+It will run all three pipelines with testing data contained at **testset** directory.
+
+Because there have `--local-scheduler`, it will not monitor by `luigid`. More detailed about the **scheduler and luigid**, please follow [luigi Central Scheduler doc](https://luigi.readthedocs.io/en/stable/central_scheduler.html)
 
 
 ## QuickStart
@@ -106,6 +109,9 @@ please following `README.md` at `static` directory.
 All parameter have been embedd into a unify directory called `config`. If you want to change the path of software/database, you could see `config/soft_db_path.py`. If you want to change the parameter of otu/deblur/dada2, you could see `config/default_params.py`. 
 
 `config/default_file_structures.py` is not yet used at pipelines, so changing it would not change the result.
+
+### 3. Error raised by dada2?
+Maybe because the version of `r-base` in global environment is higher than the installed `r-base` version inside the conda environment. So please united the version of R in global and env.
 
 ## Feedback
 

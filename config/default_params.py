@@ -1,6 +1,7 @@
 # 输入
 import os
-qiime2_p = "source activate qiime2-2019.4; qiime "
+from .soft_db_path import qiime_env
+qiime2_p = "source activate %s; qiime " % qiime_env
 
 ############################################################
 # 输出文件名集合

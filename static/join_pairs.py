@@ -30,7 +30,7 @@ def join_pairs(manifest,
                qminout: int = join_params['qminout'],
                qmax: int = join_params['qmax'],
                qmaxout: int = join_params['qmaxout'],
-               qascii: int = join_params['qascii'],
+               # qascii: int = join_params['qascii'],
                ):
     dir_path = dirname(manifest)
     os.makedirs(join(dir_path, joined_seq_path), exist_ok=True)
@@ -47,7 +47,7 @@ def join_pairs(manifest,
         all_args.append((_join_pairs_w_command_output,
                          (fwd_fp, rev_fp, fastq_out, truncqual, minlen, maxns, allowmergestagger,
                           minovlen, maxdiffs, minmergelen, maxmergelen, maxee, qmin, qminout,
-                          qmax, qmaxout, qascii)
+                          qmax, qmaxout)
                          ))
 
     assign_work_pool(cal, all_args, num_thread=n_thread)
