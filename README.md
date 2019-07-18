@@ -3,6 +3,9 @@
 For better handle different pipelines with vsearch/usearch, qiime2-deblur or qiime2-dada2.
 We present a unified pipelines which you could perforom different analysis with **single data_input.tab**
 
+![pipelines overview](./pipelines.png)
+
+red arrow means: combine with multiple down stream tasks.
 
 # installation
 
