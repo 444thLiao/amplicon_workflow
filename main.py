@@ -25,8 +25,8 @@ def run(cmd):
               'worker',default=4,help='number of workers')
 def test(odir, cmd, worker):
     project_root_path = get_dir_path(__file__, 1)
-    cmd = "--local-scheduler" if cmd else ''
-    cmd += "--workers " + str(int(worker))
+    cmd = " --local-scheduler" if cmd else ''
+    cmd += " --workers {}".format(str(int(worker)))
     run_cmd(
         f"python3 {project_root_path}/main.py run -- workflow --tab {project_root_path}/testset/seq_data/data_input.tsv --odir {odir} --analysis-type all --log-path {odir}/cmd_log.txt " + cmd,
         dry_run=False)
