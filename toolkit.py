@@ -1,4 +1,5 @@
 import os,sys
+from os.path import abspath
 from subprocess import check_call
 from glob import glob
 
@@ -29,6 +30,12 @@ def run_cmd(cmd, dry_run=False, log_file=None, **kwargs):
                    stderr=outstream,
                    **kwargs)
         outstream.flush()
+
+def get_validate_path(pth):
+    if not pth.startswith('/'):
+        pth = './' + pth
+    pth = abspath(pth)
+    return pth
 
 def valid_path(in_pth,
                check_size=False,

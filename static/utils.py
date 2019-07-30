@@ -1,5 +1,6 @@
 import csv
 import os
+from os.path import abspath
 from glob import glob
 from multiprocessing import Pool, cpu_count
 
@@ -13,7 +14,7 @@ except:
     pass
 from skbio.io import read, write
 from tqdm import tqdm
-
+from ..toolkit import get_validate_path
 
 def data_parser(path, ft='csv', **kwargs):
     if type(path) != str and ft != 'metadatas':
@@ -40,10 +41,20 @@ def get_files(indir, p):
 
 
 def write_manifest(opath, r1_files, r2_files, ids):
+    """
+    path inside manifest must is absolute path
+    :param opath:
+    :param r1_files:
+    :param r2_files:
+    :param ids:
+    :return:
+    """
     os.makedirs(os.path.dirname(os.path.abspath(opath)), exist_ok=True)
 
     template_text = "sample-id,absolute-filepath,direction\n"
     for r1, r2, sid in zip(r1_files, r2_files, ids):
+        r1 = get_validate_path(r1)
+        r2 = get_validate_path(r2)
         template_text += ','.join([sid, r1, 'forward']) + '\n'
         template_text += ','.join([sid, r2, 'reverse']) + '\n'
     with open(opath, 'w') as f1:
