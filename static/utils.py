@@ -1,6 +1,7 @@
 import csv
 import os
-from os.path import abspath
+import sys
+from os.path import dirname
 from glob import glob
 from multiprocessing import Pool, cpu_count
 
@@ -14,7 +15,9 @@ except:
     pass
 from skbio.io import read, write
 from tqdm import tqdm
-from ..toolkit import get_validate_path
+
+from toolkit import get_validate_path
+
 
 def data_parser(path, ft='csv', **kwargs):
     if type(path) != str and ft != 'metadatas':
