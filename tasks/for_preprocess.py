@@ -1,7 +1,7 @@
 import sys
 from os.path import join, dirname, basename
 
-sys.path.insert(0, dirname(dirname(dirname(__file__))))
+sys.path.insert(0, dirname(dirname(__file__)))
 import luigi
 from config import soft_db_path
 from config import default_params

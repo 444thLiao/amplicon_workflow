@@ -1,6 +1,7 @@
-import csv
-import os
-from os.path import abspath
+import csv,os,sys
+from os.path import dirname
+
+sys.path.insert(0, dirname(dirname(__file__)))
 from glob import glob
 from multiprocessing import Pool, cpu_count
 
@@ -14,7 +15,7 @@ except:
     pass
 from skbio.io import read, write
 from tqdm import tqdm
-from ..toolkit import get_validate_path
+from static import get_validate_path
 
 def data_parser(path, ft='csv', **kwargs):
     if type(path) != str and ft != 'metadatas':
@@ -96,8 +97,7 @@ def seq_eval(seq_data,
         raw_seq_eval_vis = seq_summ_vis(seq_data,
                                         n=n)
     except:
-        import pdb;
-        pdb.set_trace()
+        import pdb;pdb.set_trace()
     # 可视化原始数据的质量评估,未joined,n为随机不放回采样的reads数量
     raw_seq_eval_vis = raw_seq_eval_vis[0]
 
