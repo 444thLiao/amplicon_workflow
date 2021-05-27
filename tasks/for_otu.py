@@ -360,6 +360,5 @@ class vsearch_otutable(base_luigi_task):
 
 
 
-
 if __name__ == '__main__':
     luigi.run()

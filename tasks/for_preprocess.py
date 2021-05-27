@@ -1,5 +1,6 @@
+from subprocess import check_call
 import sys
-from os.path import join, dirname, basename
+from os.path import join, dirname, basename,exists
 
 sys.path.insert(0, dirname(dirname(__file__)))
 import luigi
@@ -41,21 +42,29 @@ class QC_trimmomatic(base_luigi_task):
         ofile_name2 = join(str(odir),
                            "{}_R2.clean.fq.gz".format(str(self.sampleid)))
         valid_path(ofile_name1, check_ofile=1)
-        return [luigi.LocalTarget(ofile_name1),
+        
+        if not exists(self.PE2):
+            return [luigi.LocalTarget(ofile_name1)]
+        else:
+            return [luigi.LocalTarget(ofile_name1),
                 luigi.LocalTarget(ofile_name2)]
 
     def run(self):
         valid_path(self.output()[0].path, check_ofile=1)
         # auto make output dir
         sample_name = str(self.sampleid)
-        if len(self.input()) == 2:
-            input1 = self.input()[0].path
-            input2 = self.input()[1].path
-        else:
-            input1 = self.PE1
-            input2 = self.PE2
+        # if len(self.input()) == 2:
+        #     input1 = self.input()[0].path
+        #     input2 = self.input()[1].path
+        # else:
+        input1 = self.PE1
+        input2 = self.PE2
 
-        cmdline = "java -jar {trimmomatic_jar} PE -threads {thread} {input1} {input2} {ofile1} {outdir}/{PE1_id}.unpaired.fq.gz {ofile2} {outdir}/{PE2_id}.unpaired.fq.gz ILLUMINACLIP:{trimmomatic_dir}/adapters/TruSeq3-PE.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:50".format(
+        if not exists(self.PE2):
+            cmdline = f"java -jar {trimmomatic_jar} SE -threads {default_params.trimmomatic_thread} {input1} {self.output()[0].path} ILLUMINACLIP:{trimmomatic_dir}/adapters/TruSeq3-SE.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36"
+            
+        else:
+            cmdline = "java -jar {trimmomatic_jar} PE -threads {thread} {input1} {input2} {ofile1} {outdir}/{PE1_id}.unpaired.fq.gz {ofile2} {outdir}/{PE2_id}.unpaired.fq.gz ILLUMINACLIP:{trimmomatic_dir}/adapters/TruSeq3-PE.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:50".format(
             trimmomatic_jar=trimmomatic_jar,
             trimmomatic_dir=trimmomatic_dir,
             input1=input1,
@@ -66,7 +75,7 @@ class QC_trimmomatic(base_luigi_task):
             ofile2=self.output()[1].path,
             outdir=dirname(self.output()[0].path),
             thread=default_params.trimmomatic_thread)
-
+        
         run_cmd(cmdline,
                 dry_run=self.dry_run,
                 log_file=self.get_log_path())
@@ -100,14 +109,24 @@ class screen_false(base_luigi_task):
         ofile_name2 = join(str(odir),
                            "{}_R2.fq.gz".format(self.sampleid))
         valid_path(ofile_name1, check_ofile=1)
-        return [luigi.LocalTarget(ofile_name1),
+        if exists(self.PE2):
+        
+            return [luigi.LocalTarget(ofile_name1),
                 luigi.LocalTarget(ofile_name2)]
+        else:
+            return [luigi.LocalTarget(ofile_name1)]
 
     def run(self):
         fq_screen = soft_db_path.fq_screen
-        clean_pe1 = self.input()[0].path
-        clean_pe2 = self.input()[1].path
-        infiles = ' '.join([clean_pe1, clean_pe2])
+        if exists(self.PE2):
+            clean_pe1 = self.input()[0].path
+            clean_pe2 = self.input()[1].path
+            infiles = ' '.join([clean_pe1, clean_pe2])
+        else:
+            clean_pe1 = self.input()[0].path
+            clean_pe2 = ''
+            infiles = clean_pe1
+            
         outdir = join(dirname(dirname(self.output()[0].path)),
                       "_screened_cache")
         valid_path(outdir, check_odir=1)
@@ -126,7 +145,9 @@ class screen_false(base_luigi_task):
                            "{}.tagged_filter.fastq.gz".format(name1))
         filtered_r2 = join(outdir,
                            "{}.tagged_filter.fastq.gz".format(name2))
-        for filtered_f, output_target in zip([filtered_r1, filtered_r2],
+        
+        for filtered_f, output_target in zip([filtered_r1, 
+                                              filtered_r2],
                                              self.output()):
             opath = output_target.path.replace('.gz', '')
             with open(opath, 'w') as new_file:
@@ -167,8 +188,11 @@ class QC_aft_screened(QC_trimmomatic):
         ofile_name2 = join(odir,
                            "{}_R2.clean.fq.gz".format(str(self.sampleid)))
         valid_path(ofile_name1, check_ofile=1)
-        return [luigi.LocalTarget(ofile_name1),
+        if exists(self.PE2):
+            return [luigi.LocalTarget(ofile_name1),
                 luigi.LocalTarget(ofile_name2)]
+        else:
+            return [luigi.LocalTarget(ofile_name1)]
 
 
 #
@@ -231,15 +255,22 @@ class joined_reads(base_luigi_task):
     odir = luigi.Parameter()
     PE1 = luigi.Parameter()
     PE2 = luigi.Parameter(default=None)
-
+    
     def requires(self):
-        return QC_aft_screened(sampleid=self.sampleid,
+        if self.screen:
+            return QC_aft_screened(sampleid=self.sampleid,
                                PE1=self.PE1,
                                PE2=self.PE2,
                                odir=self.odir,
                                log_path=self.log_path,
                                dry_run=self.dry_run)
-
+        else:
+            return QC_trimmomatic(sampleid=self.sampleid,
+                               PE1=self.PE1,
+                               PE2=self.PE2,
+                               odir=self.odir,
+                               log_path=self.log_path,
+                               dry_run=self.dry_run)
     def output(self):
         odir = str(self.odir)
 
@@ -254,15 +285,20 @@ class joined_reads(base_luigi_task):
     def run(self):
         from static.join_pairs import _join_pairs_w_command_output
         clean_pe1 = self.input()[0].path
-        clean_pe2 = self.input()[1].path
-        if not self.dry_run:
-            _join_pairs_w_command_output(fwd_fp=clean_pe1,
-                                         rev_fp=clean_pe2,
-                                         fastq_out=self.output().path.replace('.gz', ''),
-                                         log_file=self.log_path)
+        if exists(self.PE2):
+            clean_pe2 = self.input()[1].path
+            if not self.dry_run:
+                _join_pairs_w_command_output(fwd_fp=clean_pe1,
+                                            rev_fp=clean_pe2,
+                                            fastq_out=self.output().path.replace('.gz', ''),
+                                            log_file=self.log_path)
+            else:
+                run_cmd("touch %s" % self.output().path, dry_run=False),
         else:
-            run_cmd("touch %s" % self.output().path, dry_run=False),
-
+            cmd = f"ln -s `realpath {clean_pe1}` {self.output().path}"
+            run_cmd(cmd,
+                    dry_run=self.dry_run,
+                    log_file=self.get_log_path())
 
 class merged_reads(base_luigi_task):
 
@@ -276,6 +312,7 @@ class merged_reads(base_luigi_task):
                                       PE1=R1_dict[sid],
                                       PE2=R2_dict[sid],
                                       odir=self.odir,
+                                      screen=False,
                                       log_path=self.log_path,
                                       dry_run=self.dry_run)
         return tasks
@@ -296,13 +333,17 @@ class merged_reads(base_luigi_task):
             count = 0
             for sid in self.input():
                 joined_fq = self.input()[sid].path
-                stream = SeqIO.parse(gzip.open(joined_fq, 'rt'), format='fastq')
-                for read in stream:
-                    read.id = read.description = read.name = ''
-                    read.id = '{sid}_{num};barcodelabel={sid}'.format(sid=sid,
-                                                                      num=str(count))
-                    count += 1
-                    SeqIO.write(read, f1, format='fastq')
+                try:
+                    stream = SeqIO.parse(gzip.open(joined_fq, 'rt'), format='fastq')
+                    for read in stream:
+                        read.id = read.description = read.name = ''
+                        read.id = '{sid}_{num};barcodelabel={sid}'.format(sid=sid,
+                                                                        num=str(count))
+                        count += 1
+                        SeqIO.write(read, f1, format='fastq')
+                except :
+                    print(f" {joined_fq} is mal-formatted, deleting. Please re-run the whole pipeline")
+                    run_cmd(f"rm {joined_fq}",dry_run=self.dry_run,log_file=self.get_log_path())
 
 
 ############################################################

@@ -8,7 +8,8 @@ class base_luigi_task(luigi.Task):
     tab = luigi.Parameter(default=None)
     dry_run = luigi.BoolParameter(default=False)
     log_path = luigi.Parameter(default=None)
-
+    screen = luigi.Parameter(default=False)
+    
     def get_log_path(self):
         base_log_path = self.log_path
         if base_log_path is not None:

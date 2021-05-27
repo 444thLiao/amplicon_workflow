@@ -13,7 +13,7 @@ class fileparser():
 
         self.cols, self.df = validate_df(self.df, filename)
         self.df = self.df.set_index("sample ID")
-
+        self.df = self.df.fillna('')
     def get_attr(self, col):
         if col == self.df.index.name:
             return list(self.df.index)

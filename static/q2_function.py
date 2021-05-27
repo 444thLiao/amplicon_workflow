@@ -4,7 +4,7 @@ from os.path import join, abspath, exists
 import pandas as pd
 import qiime2
 from Bio import SeqIO
-from qiime2 import Artifact
+from qiime2 import Artifact,Visualization
 
 
 def convert2otutab(infile, ofile):

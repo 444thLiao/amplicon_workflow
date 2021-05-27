@@ -38,13 +38,15 @@ class workflow(luigi.Task):
     analysis_type = luigi.Parameter(default="otu")
     dry_run = luigi.BoolParameter(default=False)
     log_path = luigi.Parameter(default=None)
-
+    screen = luigi.Parameter(default=False)
+    
     def requires(self):
         from tasks.unify_postanalysis import get_tree
         kwargs = dict(odir=get_validate_path(self.odir),
                       tab=get_validate_path(self.tab),
                       dry_run=self.dry_run,
-                      log_path=self.log_path)
+                      log_path=self.log_path,
+                      screen=self.screen)
         return get_tree(analysis_type=self.analysis_type,
                         **kwargs)
 
