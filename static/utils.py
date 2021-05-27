@@ -15,7 +15,9 @@ except:
     pass
 from skbio.io import read, write
 from tqdm import tqdm
-from static import get_validate_path
+
+from toolkit import get_validate_path
+
 
 def data_parser(path, ft='csv', **kwargs):
     if type(path) != str and ft != 'metadatas':
