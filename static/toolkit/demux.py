@@ -220,18 +220,57 @@ def process_pair(read1_data,
     return output_read1, output_read2, total_bc, stats
 
 
-def process_single():
-    pass
+def process_single(read1_data,
+                 forward_primers,
+                 length_bc=None,):
+    # init
+    bc1_end = None
+    read1 = None
+    fp_end = None
+    # stats = {"reversed_read":0,
+    #          "single primer":0,
+    #          "no primer":0,}
+    stats = [0, 0, 0, 0]
+    r1_seq = str(read1_data.seq)
 
+    ## force re orientation
+    for curr_primer in forward_primers:
+        # iter forward primer first
+        matched_str = curr_primer.search(r1_seq)
+        if matched_str is not None:
+            # search the primer, if we find this, it mean r1 is r1. orientation is right.
+            read1 = read1_data
+            bc1_end = fp_start = matched_str.start()
+            # start of forward primer is the end of barcode.
+            fp_end = matched_str.end()
+            break
+            # if we find it, just break it.
+        if matched_str is not None:
+            continue
+        
+    if length_bc is None:
+        # 如果barcode 长度没给定。
+        bc1_start = 0
+    else:
+        bc1_start = bc1_end - length_bc
+    if bc1_start is not None and bc1_end is not None:
+        bc1 = str(read1[bc1_start:bc1_end].seq)
+        remaining_read1 = read1[fp_end:]
+        # cut primer and barcode before it
+
+        output_read1 = remaining_read1
+
+        return output_read1, bc1, stats
+    return None,None,stats
 
 def demux_files(seqfile1,
-                seqfile2,
                 fp,
-                rp,
                 ids,
                 bc,
                 length_bc,
                 output_dir,
+                seqfile2=None,
+                rp=None,
                 fileid='',
                 attempt_read_orientation=False,
                 barcode_type='concat',
@@ -279,7 +318,8 @@ def demux_files(seqfile1,
     if len(set(fp)) != 1:
         print('WARNING!!!! Different primers, it may occur errors.')
     fp = list(set(fp))
-    rp = list(set(rp))
+    if rp is not None:
+        rp = list(set(rp))
 
     if seqfile2:
         # PE sequencing files input
@@ -405,8 +445,58 @@ def demux_files(seqfile1,
         # loop.close()
     else:
         # todo: 处理single end的测序数据（这么少了。。。干脆不写了吧。。
-        process_single()
+        # SE sequencing files input
+        if '.gz' in seqfile1:
+            seqfile1_stream = gzip.open(seqfile1, 'rt')
+        else:
+            seqfile1_stream = seqfile1
+        # init a params but within a generator.
+        params = ((process_single,
+                   dict(read1_data=read1,
+                        forward_primers=fp,
+                        length_bc=length_bc))
+                  for read1 in SeqIO.parse(seqfile1_stream, format='fastq'))  
+        semaphore = Semaphore(100000)
 
+        def loader_f(semaphore):
+            for p in params:
+                semaphore.acquire()
+                yield p
+                
+        with mp.Pool(processes=num_thread) as thread_pool:
+            # 准备一个线程池
+            loader = loader_f(semaphore)
+            imap_it = thread_pool.imap(exec_fun, loader)
+
+            for remaining_read1, total_bc, _s in tqdm(imap_it):
+                stats["mix-orientation reads"] += _s[0]
+                stats["single primer"] += _s[1]
+                stats["no primer"] += _s[2]
+                if remaining_read1 is not None:
+                    tmp1 = remaining_read1.description
+                    remaining_read1.id = remaining_read1.name = remaining_read1.description = ''
+
+                    sid = bc2id.get(total_bc, None)
+                    if sid is not None:
+                        # try to get corresponding sample id
+                        stats["output reads"] += 1
+                        remaining_read1.id = sid + ' ' + tmp1
+
+                        file_f1 = os.path.join(output_dir, sid +'.fastq')
+                        if not os.path.isfile(file_f1):
+                            stream1 = open(file_f1, 'w')
+                        else:
+                            stream1 = open(file_f1, 'a')
+                        SeqIO.write(remaining_read1, stream1, format='fastq')
+                        stream1.close()
+
+                        # asyncio.run(async_work(remaining_read1,
+                        #                                    remaining_read2,
+                        #                                    file_f1,
+                        #                                    file_f2))
+                    else:
+                        stats["unknown barcode"] += 1
+                semaphore.release()                
     return name, stats
 
 

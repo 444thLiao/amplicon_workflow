@@ -70,7 +70,7 @@ class qualityFilter(base_luigi_task):
                 extra_str += ' --p-%s' % p
             elif val is not None and val is not False:
                 extra_str += ' --p-%s %s ' % (p, val)
-        cmd = "{qiime2_p} quality-filter q-score-joined --i-demux {input_qza} --o-filtered-sequences {output_seq} --o-filter-stats {output_stats}".format(
+        cmd = "{qiime2_p} quality-filter q-score --i-demux {input_qza} --o-filtered-sequences {output_seq} --o-filter-stats {output_stats}".format(
             qiime2_p=config.qiime2_p,
             input_qza=self.input().path,
             output_seq=self.output().path,
