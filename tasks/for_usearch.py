@@ -142,7 +142,7 @@ class usearch_denoise(base_luigi_task):
         else:
             run_cmd(cmd, dry_run=self.dry_run, log_file=self.get_log_path())
             from Bio import SeqIO
-            r = SeqIO.parse(zotu_rep,'fasta')
+            r = list(SeqIO.parse(zotu_rep,'fasta'))
             for _ in r:
                 _.id = _.id.replace('Zotu','OTU')
             with open(zotu_rep.replace('.fa','.relabelled.fa'),'w') as f1:
