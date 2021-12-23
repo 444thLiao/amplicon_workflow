@@ -133,7 +133,7 @@ class usearch_denoise(base_luigi_task):
         zotu_rep = self.output()[0].path
         zotu_mapping = self.output()[1].path
         valid_path([zotu_rep], check_ofile=1)
-        cmd = f"{usearch} usearch -unoise3 {derep_fa} -zotus {zotu_rep} -tabbedout {zotu_mapping}"
+        cmd = f"{usearch} -unoise3 {derep_fa} -zotus {zotu_rep} -tabbedout {zotu_mapping}"
         
 
         if self.dry_run:
