@@ -12,7 +12,9 @@ from utils import *
 def selective_p(p, args):
     if p not in ['dada2',
                  'deblur',
-                 'otu']:
+                 'otu',
+                 'zotu',
+                 ]:
 
         return
     elif p == 'dada2':

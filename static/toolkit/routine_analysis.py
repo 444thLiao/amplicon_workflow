@@ -56,7 +56,7 @@ def regular_analysis(OTU_table, rep_fa, outputdir, draw_pd=False):
                   level='gpf')
 
     os.system('python3 %s %s' % (draw_stack_dis, os.path.join(outputdir + '/taxonomy_report')))
-
+    
     if draw_pd:
         os.system("python3 %s -t %s -i %s -o %s -M shannon,observed_otus,faith_pd" % (draw_PD,
                                                                                       os.path.join(outputdir, 'otus.tree'),
@@ -79,7 +79,7 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--output', dest='odir', type=str, required=True,
                         help="output Dir path")
     parser.add_argument('-rc', dest='rarefaction', action='store_true',
-                        help="if you want to draw a rarefaction curve(which will take long time.But it will have a progress bar to display its.)")
+                        help="if you want to draw a rarefaction curve(which will take long time. But it will have a progress bar to display its.)")
     args = parser.parse_args()
 
     otu_tab = os.path.abspath(args.otutab)
@@ -88,3 +88,5 @@ if __name__ == '__main__':
     draw_rc = args.rarefaction
 
     regular_analysis(otu_tab, fasta, odir, draw_pd=draw_rc)
+
+    # python ~/software/16s_workflow/static/toolkit/routine_analysis.py -i ./profiling.csv -fa rep.fa -o ./routine 

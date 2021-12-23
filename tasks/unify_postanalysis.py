@@ -14,11 +14,12 @@ class get_tree(base_luigi_task):
                       log_path=self.log_path)
 
         antype = str(self.analysis_type).lower()
-        if antype not in ["all", "otu", "deblur", "dada2"]:
+        if antype not in ["all", "otu", "deblur", "dada2",'usearch']:
             raise Exception("analysis type must be one of the `all,otu,deblur,dada2`")
         required_tasks = {}
         if antype == "otu" or antype == "all":
             from tasks.for_otu import vsearch_otutable
+            required_tasks["otu"] = vsearch_otutable(**kwargs)
             required_tasks["otu"] = vsearch_otutable(**kwargs)
         if antype == "dada2" or antype == "all":
             from tasks.for_dada2 import dada2_summarize
@@ -26,6 +27,12 @@ class get_tree(base_luigi_task):
         if antype == "deblur" or antype == "all":
             from tasks.for_deblur import deblur_summarize
             required_tasks["deblur"] = deblur_summarize(**kwargs)
+        if antype == "usearch" or antype == "all":
+            from tasks.for_usearch import usearch_OTU_table,usearch_zOTU_table,usearch_denoise,usearch_OTU
+            required_tasks["usearch_OTU"] = usearch_OTU_table(**kwargs)
+            required_tasks["usearch_OTU_rep"] = usearch_OTU(**kwargs)
+            required_tasks["usearch_zOTU"] = usearch_zOTU_table(**kwargs)
+            required_tasks["usearch_zOTU_rep"] = usearch_denoise(**kwargs)
         return required_tasks
 
     def output(self):
@@ -42,20 +49,18 @@ class get_tree(base_luigi_task):
     def run(self):
         if self.dry_run:
             pass
-
+        
         for k, f in self.input().items():
-            odir = dirname(f[0].path)
-            if k == "otu":
-                cmd = "{usearch} -cluster_agg {rep_fa} -treeout {otree}".format(
-                    usearch=soft_db_path.usearch_pth,
-                    rep_fa=join(odir,"OTU_rep.fasta"),
-                    otree=join(odir,"rep.tree"),
-                )
-                run_cmd(cmd,log_file=self.get_log_path(),dry_run=self.dry_run)
+            if not '_rep' in k:
+                continue
+            if type(f) == list:
+                ofile = f[0].path
             else:
-                cmd = "{usearch} -cluster_agg {rep_fa} -treeout {otree}".format(
+                ofile = f.path
+            odir = dirname(ofile)
+            cmd = "{usearch} -cluster_agg {rep_fa} -treeout {otree}".format(
                     usearch=soft_db_path.usearch_pth,
-                    rep_fa=join(odir,f[1].path),
+                    rep_fa=ofile,
                     otree=join(odir,"rep.tree"),
                 )
-                run_cmd(cmd,log_file=self.get_log_path(),dry_run=self.dry_run)
+            run_cmd(cmd,log_file=self.get_log_path(),dry_run=self.dry_run)

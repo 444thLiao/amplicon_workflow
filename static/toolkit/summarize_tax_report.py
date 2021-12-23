@@ -77,15 +77,15 @@ def get_rank(tax):
 
 def summarize_tax(sintax, otutab, odir, level='gpf',threadhold=0.8):
     otu2tax = get_tax(sintax, threadhold)
+    otu2tax = {k.split(';')[0]:v for k,v in otu2tax.items()}
     otu_df = pd.read_csv(otutab, sep='\t', index_col=0)
-    otu_df = otu_df.reindex(columns=otu2tax)
-    # todo: if partial match, auto remove leading string.
-    if otu_df.index[0] not in otu2tax:
-        #     partial_match = [k for k in otu2tax.keys() if otu_df.index[0] in k]
-        #     otu_df = otu_df.T
-        #     if otu_df.index[0] not in otu2tax:
-        #         if right_index:
-        otu_df = otu_df.T
+    
+    num_index_intersec = set(otu_df.index).intersection(set(otu2tax))
+    num_index_column = set(otu_df.columns).intersection(set(otu2tax))
+    if len(num_index_column)>=len(num_index_intersec):
+        otu_df = otu_df.reindex(columns=otu2tax)
+    else:
+        otu_df = otu_df.reindex(otu2tax)
     if not os.path.isdir(odir):
         os.makedirs(odir)
     fname_template = "{prefix}_{tax}.txt"
@@ -108,6 +108,6 @@ def summarize_tax(sintax, otutab, odir, level='gpf',threadhold=0.8):
         group_by_df = otu_df.groupby(lambda x: otu2tax[x].get(tax,'Unknown'), axis=0)
         sum_df = group_by_df.sum().T
         norm_df = sum_df.div(total_otu_df, axis=0)
-        return norm_df,sum_df
+        #return norm_df,sum_df
         sum_df.fillna(0).to_csv(fname, sep='\t')
         norm_df.fillna(0).to_csv(fname.replace('.txt', '.norm.txt'), sep='\t')
