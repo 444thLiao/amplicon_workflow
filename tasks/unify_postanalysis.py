@@ -38,7 +38,14 @@ class get_tree(base_luigi_task):
     def output(self):
         ofiles = []
         for k, f in self.input().items():
-            odir = dirname(f[1].path)
+            if not '_rep' in k:
+                continue
+            if type(f) == list:
+                ofile = f[0].path
+            else:
+                ofile = f.path
+            odir = dirname(ofile)
+            
             ofiles.append(join(odir,
                                "rep.tree"))
         valid_path(ofiles,check_ofile=1)
@@ -49,7 +56,6 @@ class get_tree(base_luigi_task):
     def run(self):
         if self.dry_run:
             pass
-        
         for k, f in self.input().items():
             if not '_rep' in k:
                 continue
