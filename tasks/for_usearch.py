@@ -145,6 +145,7 @@ class usearch_denoise(base_luigi_task):
             r = list(SeqIO.parse(zotu_rep,'fasta'))
             for _ in r:
                 _.id = _.id.replace('Zotu','OTU')
+                _.name= _.description = ''
             with open(zotu_rep.replace('.fa','.relabelled.fa'),'w') as f1:
                 SeqIO.write(r,f1,'fasta-2line')
 

@@ -1,10 +1,10 @@
+import argparse
+from toolkit.summarize_tax_report import summarize_tax
 import os
 import sys
 
 sys.path.insert(0,
                 os.path.dirname(os.path.dirname(__file__)))
-from toolkit.summarize_tax_report import summarize_tax
-import argparse
 
 USEARCH = '/home/liaoth/tools/usearch'
 RDP_DB = '~/data2/rdp_16s_v16.fa'
@@ -38,7 +38,8 @@ def regular_analysis(OTU_table, rep_fa, outputdir, draw_pd=False):
                                                  os.path.join(outputdir + '/alpha_diversity', 'alpha.txt')))
     os.system("%s -beta_div %s -tree %s -filename_prefix '%s'" % (USEARCH,
                                                                   OTU_table,
-                                                                  os.path.join(outputdir, 'otus.tree'),
+                                                                  os.path.join(
+                                                                      outputdir, 'otus.tree'),
                                                                   outputdir + '/beta_diversity/'))
     os.system("%s -sintax %s -db %s -strand both -tabbedout %s -sintax_cutoff 0.8" % (USEARCH,
                                                                                       rep_fa,
@@ -51,19 +52,21 @@ def regular_analysis(OTU_table, rep_fa, outputdir, draw_pd=False):
     tax_summary_out_file = os.path.join(outputdir + '/taxonomy_report')
 
     summarize_tax(os.path.join(outputdir, 'sintax.txt'),
-                  OTU_table,
-                  tax_summary_out_file,
-                  level='gpf')
+                    OTU_table,
+                    tax_summary_out_file,
+                    level='gpf')
 
-    os.system('python3 %s %s' % (draw_stack_dis, os.path.join(outputdir + '/taxonomy_report')))
-    
+    os.system('python3 %s %s' %
+                (draw_stack_dis, os.path.join(outputdir + '/taxonomy_report')))
+
     if draw_pd:
         os.system("python3 %s -t %s -i %s -o %s -M shannon,observed_otus,faith_pd" % (draw_PD,
-                                                                                      os.path.join(outputdir, 'otus.tree'),
-                                                                                      OTU_table, outputdir + '/rarefaction'))
+                                                                                    os.path.join(
+                                                                                        outputdir, 'otus.tree'),
+                                                                                    OTU_table, outputdir + '/rarefaction'))
 
-    os.system('cp %s %s' % (OTU_table, outputdir + '/'))
-    os.system('cp %s %s' % (rep_fa, outputdir + '/otu_rep_seq.fasta'))
+        os.system('cp %s %s' % (OTU_table, outputdir + '/'))
+        os.system('cp %s %s' % (rep_fa, outputdir + '/otu_rep_seq.fasta'))
 
 
 # regular_analysis('/home/liaoth/data2/16s/shandong/16s_pipelines/v_analysis_dechimera/duplicate_sample/redo_way/otu_norm_filtered_40k_s2.tab',
@@ -89,4 +92,4 @@ if __name__ == '__main__':
 
     regular_analysis(otu_tab, fasta, odir, draw_pd=draw_rc)
 
-    # python ~/software/16s_workflow/static/toolkit/routine_analysis.py -i ./profiling.csv -fa rep.fa -o ./routine 
+    # python ~/software/16s_workflow/static/toolkit/routine_analysis.py -i ./profiling.csv -fa rep.fa -o ./routine

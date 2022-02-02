@@ -616,7 +616,7 @@ def main(metadata,
 if __name__ == '__main__':
     main()
 
-    # python3 pp/demux.py -m /home/liaoth/data2/16s/qiime2_learn/gpz_16s_pipelines/test/metadata.tab -o /home/liaoth/data2/16s/qiime2_learn/gpz_16s_pipelines/test/seq2_demux/ -r1 "/home/liaoth/data2/16s/qiime2_learn/gpz_16s_pipelines/test/seq_data2/test_seq*_1.fastq.gz" -r2 "/home/liaoth/data2/16s/qiime2_learn/gpz_16s_pipelines/test/seq_data2/test_seq*_2.fastq.gz" -f -r
+    # python3 /home-user/thliao/software/16s_workflow/static/toolkit/demux.py -m ./metadata.tab -o ./seq2_demux/ -r1 "./test_seq*_1.fastq.gz" -r2 "./test_seq*_2.fastq.gz" -f -r
 
     # from os.path import dirname
     #
