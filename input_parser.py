@@ -2,7 +2,8 @@ import os
 
 import pandas as pd
 
-from static import input_template_path
+from config import input_template_path
+
 
 
 class fileparser():

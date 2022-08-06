@@ -12,11 +12,22 @@ class get_tree(base_luigi_task):
                       tab=self.tab,
                       dry_run=self.dry_run,
                       log_path=self.log_path)
-
-        antype = str(self.analysis_type).lower()
-        if antype not in ["all", "otu", "deblur", "dada2",'usearch']:
-            raise Exception("analysis type must be one of the `all,otu,deblur,dada2`")
         required_tasks = {}
+        
+        antype = str(self.analysis_type).lower()
+        if antype not in ["all", "otu", "deblur", "dada2",'usearch','qc']:
+            raise Exception("analysis type must be one of the `all,otu,deblur,dada2`")
+        if antype=='qc':
+            from tasks.for_preprocess import multiqc
+            required_tasks["fastqc_before"] = multiqc(status='before',
+                                                    **kwargs
+                                                    )
+            required_tasks["fastqc_after"] = multiqc(status='after',
+                                                    **kwargs
+                                                    )
+            return required_tasks
+        #####
+        
         if antype == "otu" or antype == "all":
             from tasks.for_otu import vsearch_otutable
             required_tasks["otu"] = vsearch_otutable(**kwargs)

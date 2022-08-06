@@ -88,7 +88,7 @@ def summarize_tax(sintax, otutab, odir, level='gpf',threadhold=0.8):
         otu_df = otu_df.reindex(otu2tax)
     if not os.path.isdir(odir):
         os.makedirs(odir)
-    fname_template = "{prefix}_{tax}.txt"
+    #fname_template = "{prefix}_{tax}.txt"
     tax_fullname = {
         "d": "domain",
         "p": "phylum",
@@ -102,8 +102,7 @@ def summarize_tax(sintax, otutab, odir, level='gpf',threadhold=0.8):
     otu_df = otu_df.fillna(0)
     for tax in level:
         tax = tax.lower()
-        fname = os.path.join(odir, fname_template.format(prefix=os.path.basename(otutab).split('.')[0],
-                                                         tax=tax_fullname.get(tax, '')))
+        fname = os.path.join(odir, "16S_{tax}.txt".format(tax=tax_fullname.get(tax, '')))
 
         group_by_df = otu_df.groupby(lambda x: otu2tax[x].get(tax,'Unknown'), axis=0)
         sum_df = group_by_df.sum().T

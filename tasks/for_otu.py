@@ -1,11 +1,12 @@
 from os.path import join,dirname
 import sys
 sys.path.insert(0,dirname(dirname(__file__)))
-import luigi
-
+import luigi,os
 from config import soft_db_path
 from tasks.basic_tasks import base_luigi_task
 from toolkit import run_cmd, valid_path
+from Bio import SeqIO
+
 
 vsearch = soft_db_path.vsearch_pth
 rdp_gold = soft_db_path.rdp_gold_pth
@@ -88,6 +89,9 @@ class vsearch_filter(base_luigi_task):
         # cmd = "vsearch --fastx_filter {input} --fastq_maxee 1.0 --fastq_trunclen 240 --fastaout {output}".format(input=input,output=output)
         merged_fa = self.input().path
         filtered_fa = self.output().path
+        total_len = int(os.popen(f"grep -c '^+$' {merged_fa}").read().strip())
+        length_dis = [len(_.seq) for _ in SeqIO.parse(merged_fa,'fastq')]
+        
         valid_path(filtered_fa, check_ofile=1)
         cmd = f"{vsearch} --fastx_filter {merged_fa} --fastq_maxee 1.0 --fastq_trunclen 240 --fastaout {filtered_fa}"
         run_cmd(cmd,

@@ -1,22 +1,128 @@
-from subprocess import check_call
 import sys
 from os.path import join, dirname, basename,exists
-
 sys.path.insert(0, dirname(dirname(__file__)))
-import luigi
-from config import soft_db_path
-from config import default_params
-from tasks.basic_tasks import base_luigi_task
-from toolkit import run_cmd, valid_path
-from input_parser import fileparser
-from Bio import SeqIO
-import gzip
+
+from config import *
+
 
 vsearch = soft_db_path.vsearch_pth
 rdp_gold = soft_db_path.rdp_gold_pth
 map_pl = soft_db_path.map_pl_pth
 trimmomatic_jar = soft_db_path.trimmomatic_jar
 trimmomatic_dir = dirname(trimmomatic_jar)
+fastqc_path = soft_db_path.fastqc_path
+multiac_path = soft_db_path.multiqc_path
+
+
+
+# give some default parameter
+class fastqc(base_luigi_task):
+    sampleid = luigi.Parameter()
+    odir = luigi.Parameter()
+    PE1 = luigi.Parameter()
+    PE2 = luigi.Parameter(default=None)
+    prefix = luigi.Parameter(default="OTU")    
+    status = luigi.Parameter(default="before")
+
+    def requires(self):
+        if self.status == 'before':
+            "before trimmomatic/other QC"
+            "it doesn't need any tasks"
+            return
+        elif self.status == 'after':
+            return QC_trimmomatic(sampleid=self.sampleid,
+                              PE1=self.PE1,
+                              PE2=self.PE2,
+                              odir=self.odir,
+                              log_path=self.log_path,
+                              dry_run=self.dry_run)
+            
+    def output(self):
+        odir = join(str(self.odir),
+                            "fastqc_%s" % self.status)
+        if self.status == 'before':
+            ofiles = ["%s_fastqc.zip" % basename(str(self.PE1)).rsplit('.', maxsplit=2)[0],
+                      "%s_fastqc.zip" % basename(str(self.PE2)).rsplit('.', maxsplit=2)[0]]
+        elif self.status == 'after':
+            ofiles = ["%s_fastqc.zip" % basename(self.input()[0].path).rsplit('.', maxsplit=2)[0],
+                      "%s_fastqc.zip" % basename(self.input()[1].path).rsplit('.', maxsplit=2)[0], ]
+        else:
+            raise Exception
+        # ofiles is a list of ouput of R1 & R2
+        return [luigi.LocalTarget(join(odir, f))
+                for f in ofiles]
+
+    def run(self):
+        if self.status == 'before':
+            R1 = self.PE1
+            R2 = self.PE2
+        elif self.status == 'after':
+            R1 = self.input()[0].path
+            R2 = self.input()[1].path
+        
+        infiles = [R1,R2]
+        odir=dirname(self.output()[0].path)
+        dry_run=self.dry_run
+        log_file=self.get_log_path()
+        
+        if not self.dry_run:
+            valid_path(infiles, check_size=True)
+        valid_path(odir, check_odir=True)
+        fastqc_cmd = "{exe_path} {in_files} -t 2 -o {odir} --quiet"
+
+        cmd = fastqc_cmd.format(exe_path=fastqc_path,
+                                in_files=' '.join(infiles),
+                                odir=odir)
+        run_cmd(cmd, dry_run=dry_run, log_file=log_file)
+        
+        if self.dry_run:
+            for _o in self.output():
+                run_cmd("touch %s" % _o.path, dry_run=False)
+
+
+class multiqc(base_luigi_task):
+    status = luigi.Parameter()
+
+    def requires(self):
+        df = fileparser(self.tab)
+        R1_dict = df.R1
+        R2_dict = df.R2
+        kwargs = self.get_kwargs()
+        tasks = {}
+        for sid in R1_dict.keys():
+        # if self.status == 'before' or self.status == 'after':
+            tasks[sid] = fastqc(PE1=R1_dict[sid],
+                           PE2=R2_dict[sid],
+                           status=self.status,
+                           sampleid=sid,
+                           **kwargs)
+        return tasks
+    def output(self):
+        if self.status == 'before' or self.status == 'after':
+            indir = dirname(list(self.input().values())[0][0].path)  # any one is ok
+        else:
+            raise Exception
+        filename = basename(indir)
+        target_file = join(indir, filename + '.html')
+        return luigi.LocalTarget(target_file)
+
+    def run(self):
+
+        if self.dry_run:
+            run_cmd("touch %s" % self.output().path, dry_run=False)
+        else:
+            indir = dirname(self.output().path)  # any one is ok
+            filename = basename(indir)
+            
+            valid_path(indir, check_odir=True)
+            multiqc_cmd = "{exe_path} {indir} --outdir {odir} --filename {fn} --force -q {extra_str}"
+            cmd = multiqc_cmd.format(exe_path=multiac_path,
+                                    indir=indir,
+                                    odir=indir,
+                                    fn=filename,
+                                    extra_str='')
+            run_cmd(cmd, dry_run=self.dry_run, log_file=self.get_log_path())
+        
 
 
 class QC_trimmomatic(base_luigi_task):

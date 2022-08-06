@@ -81,7 +81,7 @@ qc_joined_params = dict(
 
 deblur_args = dict(
     # deblur
-    trim_length=250,
+    trim_length=220,
     sample_stats=True,
     mean_error=0.005,  # default
     indel_prob=0.01,  # default
@@ -95,13 +95,15 @@ deblur_args = dict(
 # pipeliens args
 dada2_args = dict(
     # dada2
-    trunc_len_f=140,
-    trunc_len_r=150,
+    trunc_len_f=230,
+    trunc_len_r=230,
     n_threads=0,  # all threads
     trunc_q=2,  # default
     n_reads_learn=1000000,  # default
-    max_ee=2.0,  # default
+    max_ee_f=2.0,  # default
+    max_ee_r=2.0,  # default
 )
+
 
 
 # Not implement yet

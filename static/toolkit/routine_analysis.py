@@ -1,16 +1,20 @@
-import argparse
-from toolkit.summarize_tax_report import summarize_tax
 import os
 import sys
 
 sys.path.insert(0,
                 os.path.dirname(os.path.dirname(__file__)))
 
-USEARCH = '/home/liaoth/tools/usearch'
-RDP_DB = '~/data2/rdp_16s_v16.fa'
-draw_PD = "/home/liaoth/project/16s_pipelines/microbiome_utils/Visualization/draw_PD.py"
-draw_stack_dis = "/home/liaoth/data2/project/16s_pipelines/microbiome_utils/Visualization/draw_stack_bar_plus.py"
+import argparse
+from toolkit.summarize_tax_report import summarize_tax
 
+
+
+USEARCH = os.popen(f"which usearch").read().strip()
+RDP_DB = '/home-user/thliao/db/16S/RDP/rdp_16s_v18.fa'
+draw_stack_dis = f"{os.path.dirname(__file__)}/draw_stack_bar_plus.py"
+draw_rarefraction  = f"{os.path.dirname(__file__)}/rarefraction.py "
+
+draw_PD = "/home/liaoth/project/16s_pipelines/microbiome_utils/Visualization/draw_PD.py"
 
 def regular_analysis(OTU_table, rep_fa, outputdir, draw_pd=False):
     """
@@ -22,43 +26,54 @@ def regular_analysis(OTU_table, rep_fa, outputdir, draw_pd=False):
     """
     if not os.path.isdir(outputdir):
         os.system('mkdir -p %s;' % outputdir)
-
+    first_row = open(OTU_table).read().strip().split('\n')[0]
+    if not first_row.startswith('#OTU'):
+        c = open(OTU_table).read().split('\n')
+        OTU_table = OTU_table.rsplit('.')[0]+'_renamed.csv'
+        fr = '\t'.join(['#OTU'] + c[0].split('\t')[1:])
+        contents = [fr] + c[1:]
+        with open(OTU_table,'w') as f1:
+            f1.write('\n'.join(contents))
+    
     os.system('mkdir -p %s;' % (outputdir + '/beta_diversity'))
     os.system('mkdir -p %s;' % (outputdir + '/alpha_diversity'))
     os.system('mkdir -p %s;' % (outputdir + '/rarefaction'))
     os.system('mkdir -p %s;' % (outputdir + '/taxonomy_report'))
-    print('%s -cluster_agg %s -treeout %s' % (USEARCH,
-                                              rep_fa,
-                                              os.path.join(outputdir, 'otus.tree')))
+    
+    output_tree = os.path.join(outputdir, 'otus.tree')
+
+    sintax = os.path.join(outputdir, 'sintax.txt')
     os.system('%s -cluster_agg %s -treeout %s' % (USEARCH,
                                                   rep_fa,
-                                                  os.path.join(outputdir, 'otus.tree')))
+                                                  output_tree))
     os.system("%s -alpha_div %s -output '%s'" % (USEARCH,
                                                  OTU_table,
                                                  os.path.join(outputdir + '/alpha_diversity', 'alpha.txt')))
     os.system("%s -beta_div %s -tree %s -filename_prefix '%s'" % (USEARCH,
                                                                   OTU_table,
-                                                                  os.path.join(
-                                                                      outputdir, 'otus.tree'),
+                                                                  output_tree,
                                                                   outputdir + '/beta_diversity/'))
+    
     os.system("%s -sintax %s -db %s -strand both -tabbedout %s -sintax_cutoff 0.8" % (USEARCH,
                                                                                       rep_fa,
                                                                                       RDP_DB,
-                                                                                      os.path.join(outputdir, 'sintax.txt')))
+                                                                                      sintax))
     os.system("%s -alpha_div_rare %s -output %s/rare.txt" % (USEARCH,
                                                              OTU_table,
                                                              outputdir + '/rarefaction'))
 
     tax_summary_out_file = os.path.join(outputdir + '/taxonomy_report')
 
-    summarize_tax(os.path.join(outputdir, 'sintax.txt'),
+    summarize_tax(sintax,
                     OTU_table,
                     tax_summary_out_file,
                     level='gpf')
 
     os.system('python3 %s %s' %
                 (draw_stack_dis, os.path.join(outputdir + '/taxonomy_report')))
-
+    os.system('python3 %s %s' %
+                (draw_rarefraction, os.path.join(outputdir + '/rarefaction/rare.txt')))
+    
     if draw_pd:
         os.system("python3 %s -t %s -i %s -o %s -M shannon,observed_otus,faith_pd" % (draw_PD,
                                                                                     os.path.join(
