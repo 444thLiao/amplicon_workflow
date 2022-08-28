@@ -46,8 +46,6 @@ class run_dada2(base_luigi_task):
 
     def run(self):
         valid_path(self.output()[0].path, check_ofile=1)
-        
-
         _infile = self.input()['fastqc_after'].path.replace('.html','_data/multiqc_fastqc.txt')
         _df = pd.read_csv(_infile,sep='\t',index_col=0)
         #_df.loc[:,'max seq len'] = [int(v.split('-')[1].strip()) for v in _df['avg_sequence_length'] ]
