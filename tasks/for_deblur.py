@@ -17,11 +17,9 @@ map_pl = soft_db_path.map_pl_pth
 
 class joined_fastq(base_luigi_task):
     def requires(self):
-        from tasks import import_data
-        return import_data(tab=self.tab,
-                           odir=self.odir,
-                           dry_run=self.dry_run,
-                           log_path=self.log_path, )
+        from tasks.for_preprocess import import_data
+        kwargs = self.get_kwargs()
+        return import_data(**kwargs )
 
     def output(self):
         odir = join(str(self.odir),
@@ -32,9 +30,9 @@ class joined_fastq(base_luigi_task):
         return luigi.LocalTarget(ofile)
 
     def run(self):         
-        extra_str = self.batch_get_params('join_params')
+        extra_str = self.batch_get_config_params('join_params')
         cmd = "{qiime2_p} vsearch join-pairs --i-demultiplexed-seqs {input_file} --o-joined-sequences {ofile}".format(
-            qiime2_p=config.qiime2_p,
+            qiime2_p=self.get_config_params('qiime2_p'),
             input_file=self.input().path,
             ofile=self.output().path) + extra_str
         run_cmd(cmd,
@@ -47,19 +45,17 @@ class joined_fastq(base_luigi_task):
 
 class qualityFilter(base_luigi_task):
     def requires(self):
-        return joined_fastq(tab=self.tab,
-                            odir=self.odir,
-                            dry_run=self.dry_run,
-                            log_path=self.log_path)
+        kwargs = self.get_kwargs()
+        return joined_fastq(**kwargs)
 
     def output(self):
         return luigi.LocalTarget(self.input().path.replace("joined_seq",
                                                            "joined_qc_seq"))
 
     def run(self):
-        extra_str = self.batch_get_params('qc_joined_params')
+        extra_str = self.batch_get_config_params('qc_joined_params')
         cmd = "{qiime2_p} quality-filter q-score --i-demux {input_qza} --o-filtered-sequences {output_seq} --o-filter-stats {output_stats}".format(
-            qiime2_p=self.get_params('qiime2_p'),
+            qiime2_p=self.get_config_params('qiime2_p'),
             input_qza=self.input().path,
             output_seq=self.output().path,
             output_stats=self.output().path.replace(
@@ -77,10 +73,8 @@ class run_deblur(base_luigi_task):
     mission = "deblur"
 
     def requires(self):
-        return qualityFilter(tab=self.tab,
-                             odir=self.odir,
-                             dry_run=self.dry_run,
-                             log_path=self.log_path)
+        kwargs = self.get_kwargs()
+        return qualityFilter(**kwargs)
 
     def output(self):
         ofiles = list(map(luigi.LocalTarget,
@@ -98,9 +92,9 @@ class run_deblur(base_luigi_task):
 
     def run(self):
         valid_path(self.output()[0].path, check_ofile=1)
-        extra_str = self.batch_get_params('deblur_args')
+        extra_str = self.batch_get_config_params('deblur_args')
         cmd = """{qiime2_p} deblur denoise-16S --i-demultiplexed-seqs {input_file} --o-representative-sequences {rep_seq} --o-table {profiling_tab} --o-stats {stats_file}""".format(
-            qiime2_p=self.get_params('qiime2_p'),
+            qiime2_p=self.get_config_params('qiime2_p'),
             input_file=self.input().path,
             rep_seq=self.output()[1].path,
             profiling_tab=self.output()[0].path,
@@ -119,31 +113,19 @@ class run_deblur(base_luigi_task):
 ############################################################
 class joined_summarize(visulize_seq):
     def requires(self):
-        return joined_fastq(tab=self.tab,
-                            odir=self.odir,
-                            dry_run=self.dry_run,
-                            log_path=self.log_path)
+        kwargs = self.get_kwargs()
+        return joined_fastq(**kwargs)
 
 class view_rep_seq(tabulate_seq):
     def requires(self):
-        kwargs = dict(tab=self.tab,
-                      odir=self.odir,
-                      dry_run=self.dry_run,
-                      log_path=self.log_path)
+        kwargs = self.get_kwargs()
         return run_deblur(**kwargs)
 
 
-class deblur_summarize(luigi.Task):
-    tab = luigi.Parameter()
-    odir = luigi.Parameter()
-    dry_run = luigi.BoolParameter()
-    log_path = luigi.Parameter(default=None)
+class deblur_summarize(base_luigi_task):
 
     def requires(self):
-        kwargs = dict(tab=self.tab,
-                      odir=self.odir,
-                      dry_run=self.dry_run,
-                      log_path=self.log_path)
+        kwargs = self.get_kwargs()
         required_tasks = {}
         required_tasks["deblur"] = run_deblur(**kwargs)
         required_tasks["view_rep_seq"] = view_rep_seq(**kwargs)

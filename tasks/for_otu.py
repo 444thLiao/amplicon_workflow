@@ -72,11 +72,9 @@ map_pl = soft_db_path.map_pl_pth
 
 class vsearch_filter(base_luigi_task):
     def requires(self):
-        from tasks import merged_reads
-        return merged_reads(tab=self.tab,
-                            odir=self.odir,
-                            dry_run=self.dry_run,
-                            log_path=self.log_path)
+        from tasks.for_preprocess import merged_reads
+        kwargs = self.get_kwargs()
+        return merged_reads(**kwargs)
 
     def output(self):
         odir = join(str(self.odir),
@@ -95,7 +93,7 @@ class vsearch_filter(base_luigi_task):
         total_len = int(os.popen(f"grep -c '^+$' {merged_fa}").read().strip())
         length_dis = [len(_.seq) for _ in SeqIO.parse(merged_fa,'fastq')]
         
-        trunclen = self.get_params('trunclen')
+        trunclen = self.get_config_params(('vesearch_args','trunclen'))
         valid_path(filtered_fa, check_ofile=1)
         cmd = f"{vsearch} --fastx_filter {merged_fa} --fastq_maxee 1.0 --fastq_trunclen {trunclen} --fastaout {filtered_fa}"
         run_cmd(cmd,
@@ -109,9 +107,8 @@ class vsearch_filter(base_luigi_task):
 class vsearch_derep(base_luigi_task):
 
     def requires(self):
-        return vsearch_filter(tab=self.tab,odir=self.odir,
-                              dry_run=self.dry_run,
-                              log_path=self.log_path)
+        kwargs = self.get_kwargs()
+        return vsearch_filter(**kwargs)
 
     def output(self):
         odir = join(str(self.odir), "OTU_pipelines",'derep')
@@ -137,8 +134,8 @@ class vsearch_derep(base_luigi_task):
 class vsearch_rmSingle(base_luigi_task):
 
     def requires(self):
-        return vsearch_derep(tab=self.tab,odir=self.odir, dry_run=self.dry_run,
-                             log_path=self.log_path)
+        kwargs = self.get_kwargs()
+        return vsearch_derep(**kwargs)
 
     def output(self):
         odir = join(str(self.odir),"OTU_pipelines", 'derep')
@@ -160,7 +157,8 @@ class vsearch_rmSingle(base_luigi_task):
 
 class vsearch_pre_cluster(base_luigi_task):
     def requires(self):
-        return vsearch_derep(tab=self.tab,odir=self.odir, dry_run=self.dry_run, log_path=self.log_path)
+        kwargs = self.get_kwargs()
+        return vsearch_derep(**kwargs)
 
     def output(self):
         odir = join(str(self.odir),"OTU_pipelines", 'dechimera')
@@ -179,7 +177,7 @@ class vsearch_pre_cluster(base_luigi_task):
         derep_fa = self.input()[0].path
         precluster_uc = self.output()[1].path
         precluster_fa = self.output()[0].path
-        cluster_ratio = self.get_params('cluster_ratio')
+        cluster_ratio = self.get_config_params(('vesearch_args','cluster_ratio'))
         cmd = f"{vsearch} --cluster_size {derep_fa} --id {cluster_ratio} --sizeout --fasta_width 0 --uc {precluster_uc} --centroids {precluster_fa}"
         run_cmd(cmd, dry_run=self.dry_run, log_file=self.get_log_path())
 
@@ -190,7 +188,8 @@ class vsearch_pre_cluster(base_luigi_task):
 
 class vsearch_uchime_deno(base_luigi_task):
     def requires(self):
-        return vsearch_pre_cluster(tab=self.tab,odir=self.odir, dry_run=self.dry_run, log_path=self.log_path)
+        kwargs = self.get_kwargs()
+        return vsearch_pre_cluster(**kwargs)
 
     def output(self):
         odir = join(str(self.odir),"OTU_pipelines", 'dechimera')
@@ -216,8 +215,8 @@ class vsearch_uchime_deno(base_luigi_task):
 
 class vsearch_uchime_ref(base_luigi_task):
     def requires(self):
-        return vsearch_uchime_deno(tab=self.tab,odir=self.odir, dry_run=self.dry_run,
-                                   log_path=self.log_path)
+        kwargs = self.get_kwargs()
+        return vsearch_uchime_deno(**kwargs)
 
     def output(self):
         odir = join(str(self.odir),"OTU_pipelines", 'dechimera')
@@ -242,10 +241,11 @@ class vsearch_uchime_ref(base_luigi_task):
 
 class vsearch_map1(base_luigi_task):
     def requires(self):
+        kwargs = self.get_kwargs()
         required_task = {}
-        required_task["derep"] = vsearch_derep(tab=self.tab,odir=self.odir, dry_run=self.dry_run, log_path=self.log_path)
-        required_task["precluster"] = vsearch_pre_cluster(tab=self.tab,odir=self.odir, dry_run=self.dry_run, log_path=self.log_path)
-        required_task["uchime_ref"] = vsearch_uchime_ref(tab=self.tab,odir=self.odir, dry_run=self.dry_run, log_path=self.log_path)
+        required_task["derep"] = vsearch_derep(**kwargs)
+        required_task["precluster"] = vsearch_pre_cluster(**kwargs)
+        required_task["uchime_ref"] = vsearch_uchime_ref(**kwargs)
         return required_task
 
     def output(self):
@@ -272,9 +272,10 @@ class vsearch_map1(base_luigi_task):
 class vsearch_map2(base_luigi_task):
 
     def requires(self):
+        kwargs = self.get_kwargs()
         required_task = {}
-        required_task["map1"] = vsearch_map1(tab=self.tab,odir=self.odir, dry_run=self.dry_run, log_path=self.log_path)
-        required_task["derep"] = vsearch_derep(tab=self.tab,odir=self.odir, dry_run=self.dry_run, log_path=self.log_path)
+        required_task["map1"] = vsearch_map1(**kwargs)
+        required_task["derep"] = vsearch_derep(**kwargs)
         return required_task
 
     def output(self):
@@ -300,7 +301,8 @@ class vsearch_map2(base_luigi_task):
 
 class vsearch_cluster(base_luigi_task):
     def requires(self):
-        return vsearch_map2(tab=self.tab,odir=self.odir, dry_run=self.dry_run, log_path=self.log_path)
+        kwargs = self.get_kwargs()
+        return vsearch_map2(**kwargs)
 
     def output(self):
         odir = join(str(self.odir),"OTU_pipelines", 'otu_output')
@@ -320,7 +322,7 @@ class vsearch_cluster(base_luigi_task):
         rep_fa = self.output()[0].path
         cluster_uc = self.output()[1].path
         valid_path([rep_fa, cluster_uc], check_ofile=1)
-        cluster_ratio = self.get_params('cluster_ratio')
+        cluster_ratio = self.get_config_params(('vesearch_args','cluster_ratio'))
         cmd = f"{vsearch} --cluster_size {nonchimera_fa} --id {cluster_ratio} --sizein --sizeout --fasta_width 0 --uc {cluster_uc} --relabel OTU --centroids {rep_fa}"
 
         run_cmd(cmd, dry_run=self.dry_run, log_file=self.get_log_path())
@@ -333,20 +335,14 @@ class vsearch_cluster(base_luigi_task):
 class vsearch_otutable(base_luigi_task):
     def requires(self):
         required_task = {}
-        required_task["filter"] = vsearch_filter(tab=self.tab,
-                                                 odir=self.odir,
-                                                 dry_run=self.dry_run,
-                                                 log_path=self.log_path)
-        required_task["cluster"] = vsearch_cluster(tab=self.tab,
-                                                   odir=self.odir,
-                                                   dry_run=self.dry_run,
-                                                   log_path=self.log_path)
+        kwargs = self.get_kwargs()
+        required_task["filter"] = vsearch_filter(**kwargs)
+        required_task["cluster"] = vsearch_cluster(**kwargs)
         return required_task
 
     def output(self):
         odir = join(str(self.odir),"OTU_pipelines", 'otu_output')
-        ofile = join(odir, "raw_OTU.tab")
-
+        ofile = join(odir, "OTU_rep.fasta")
         mapfile = join(odir, "raw_OTU.uc")
         return [luigi.LocalTarget(ofile),
                 luigi.LocalTarget(mapfile)]
@@ -359,7 +355,7 @@ class vsearch_otutable(base_luigi_task):
         map_output = self.output()[1].path
         raw_otutab = self.output()[0].path
         valid_path([map_output, raw_otutab], check_ofile=1)
-        cluster_ratio = self.get_params('cluster_ratio')
+        cluster_ratio = self.get_config_params(('vesearch_args','cluster_ratio'))
         cmd = f"{vsearch} --usearch_global {filtered_fa} --db {rep_fa} --strand plus --id {cluster_ratio} --uc {map_output} --otutabout {raw_otutab}"
 
         run_cmd(cmd, dry_run=self.dry_run, log_file=self.get_log_path())

@@ -25,17 +25,17 @@ class fastqc(base_luigi_task):
     status = luigi.Parameter(default="before")
 
     def requires(self):
+        kwargs = self.get_kwargs()
         if self.status == 'before':
             "before trimmomatic/other QC"
             "it doesn't need any tasks"
             return
+        
         elif self.status == 'after':
             return QC_trimmomatic(sampleid=self.sampleid,
                               PE1=self.PE1,
                               PE2=self.PE2,
-                              odir=self.odir,
-                              log_path=self.log_path,
-                              dry_run=self.dry_run)
+                              **kwargs)
             
     def output(self):
         odir = join(str(self.odir),
@@ -167,7 +167,7 @@ class QC_trimmomatic(base_luigi_task):
         input2 = self.PE2
 
         if not exists(self.PE2):
-            cmdline = f"java -jar {trimmomatic_jar} SE -threads {default_params.trimmomatic_thread} {input1} {self.output()[0].path} ILLUMINACLIP:{trimmomatic_dir}/adapters/TruSeq3-SE.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36"
+            cmdline = f"java -jar {trimmomatic_jar} SE -threads {self.get_config_params('trimmomatic_thread')} {input1} {self.output()[0].path} ILLUMINACLIP:{trimmomatic_dir}/adapters/TruSeq3-SE.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36"
             
         else:
             cmdline = "java -jar {trimmomatic_jar} PE -threads {thread} {input1} {input2} {ofile1} {outdir}/{PE1_id}.unpaired.fq.gz {ofile2} {outdir}/{PE2_id}.unpaired.fq.gz ILLUMINACLIP:{trimmomatic_dir}/adapters/TruSeq3-PE.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:50".format(
@@ -180,7 +180,7 @@ class QC_trimmomatic(base_luigi_task):
             ofile1=self.output()[0].path,
             ofile2=self.output()[1].path,
             outdir=dirname(self.output()[0].path),
-            thread=default_params.trimmomatic_thread)
+            thread=self.get_config_params('trimmomatic_thread'))
         
         run_cmd(cmdline,
                 dry_run=self.dry_run,
@@ -197,12 +197,11 @@ class screen_false(base_luigi_task):
     PE2 = luigi.Parameter(default=None)
 
     def requires(self):
+        kwargs = self.get_kwargs()
         return QC_trimmomatic(sampleid=self.sampleid,
                               PE1=self.PE1,
                               PE2=self.PE2,
-                              odir=self.odir,
-                              log_path=self.log_path,
-                              dry_run=self.dry_run)
+                              **kwargs)
 
     def output(self):
         odir = join(str(self.odir),
@@ -237,7 +236,7 @@ class screen_false(base_luigi_task):
                       "_screened_cache")
         valid_path(outdir, check_odir=1)
         # anyone could be ok
-        threads = default_params.fq_screen_thread
+        threads = self.get_config_params('fq_screen_thread')
         cmdline = f"{fq_screen} {infiles} --outdir {outdir} --nohits --aligner bowtie2 --threads {threads}"
         run_cmd(cmdline,
                 log_file=self.get_log_path(),
@@ -276,12 +275,11 @@ class screen_false(base_luigi_task):
 class QC_aft_screened(QC_trimmomatic):
 
     def requires(self):
+        kwargs = self.get_kwargs()
         return screen_false(sampleid=self.sampleid,
                             PE1=self.PE1,
                             PE2=self.PE2,
-                            odir=self.odir,
-                            log_path=self.log_path,
-                            dry_run=self.dry_run)
+                            **kwargs)
 
     def output(self):
         odir = join(str(self.odir),
@@ -363,20 +361,17 @@ class joined_reads(base_luigi_task):
     PE2 = luigi.Parameter(default=None)
     
     def requires(self):
+        kwargs = self.get_kwargs()
         if self.screen:
             return QC_aft_screened(sampleid=self.sampleid,
                                PE1=self.PE1,
                                PE2=self.PE2,
-                               odir=self.odir,
-                               log_path=self.log_path,
-                               dry_run=self.dry_run)
+                               **kwargs)
         else:
             return QC_trimmomatic(sampleid=self.sampleid,
                                PE1=self.PE1,
                                PE2=self.PE2,
-                               odir=self.odir,
-                               log_path=self.log_path,
-                               dry_run=self.dry_run)
+                               **kwargs)
     def output(self):
         odir = str(self.odir)
 
@@ -412,15 +407,14 @@ class merged_reads(base_luigi_task):
         df = fileparser(self.tab)
         R1_dict = df.R1
         R2_dict = df.R2
+        kwargs = self.get_kwargs()
         tasks = {}
         for sid in R1_dict.keys():
             tasks[sid] = joined_reads(sampleid=sid,
                                       PE1=R1_dict[sid],
                                       PE2=R2_dict[sid],
-                                      odir=self.odir,
                                       screen=False,
-                                      log_path=self.log_path,
-                                      dry_run=self.dry_run)
+                                      **kwargs)
         return tasks
 
     def output(self):
@@ -461,14 +455,13 @@ class import_data(base_luigi_task):
         df = fileparser(self.tab)
         R1_dict = df.R1
         R2_dict = df.R2
+        kwargs = self.get_kwargs()
         tasks = {}
         for sid in R1_dict.keys():
             tasks[sid] = QC_aft_screened(sampleid=sid,
                                          PE1=R1_dict[sid],
                                          PE2=R2_dict[sid],
-                                         odir=self.odir,
-                                         log_path=self.log_path,
-                                         dry_run=self.dry_run,
+                                         **kwargs
                                          )
         return tasks
 
@@ -480,7 +473,6 @@ class import_data(base_luigi_task):
         return luigi.LocalTarget(ofile)
 
     def run(self):
-        import config.default_params as config
         collect_params = dict(ids=[],
                               r1_files=[],
                               r2_files=[])
@@ -500,7 +492,7 @@ class import_data(base_luigi_task):
           --input-path {manifest} \
           --output-path {prefix}.qza \
           --input-format PairedEndFastqManifestPhred33".format(
-            qiime2_p=config.qiime2_p,
+            qiime2_p=self.get_config_params('qiime2_p'),
             manifest=opath,
             prefix=opath, )
         run_cmd(cmd,dry_run=self.dry_run,log_file=self.get_log_path())

@@ -1,5 +1,5 @@
 import luigi
-from tasks import base_luigi_task
+from tasks.basic_tasks import base_luigi_task
 from os.path import dirname,join
 from config import soft_db_path
 from toolkit import run_cmd,valid_path
@@ -8,10 +8,8 @@ class get_tree(base_luigi_task):
     analysis_type = luigi.Parameter(default="otu")
 
     def requires(self):
-        kwargs = dict(odir=self.odir,
-                      tab=self.tab,
-                      dry_run=self.dry_run,
-                      log_path=self.log_path)
+        self.get_config()
+        kwargs = self.get_kwargs()
         required_tasks = {}
         
         antype = str(self.analysis_type).lower()
@@ -49,8 +47,6 @@ class get_tree(base_luigi_task):
     def output(self):
         ofiles = []
         for k, f in self.input().items():
-            if not '_rep' in k:
-                continue
             if type(f) == list:
                 ofile = f[0].path
             else:
@@ -59,6 +55,7 @@ class get_tree(base_luigi_task):
             
             ofiles.append(join(odir,
                                "rep.tree"))
+        ofiles = list(set(ofiles))
         valid_path(ofiles,check_ofile=1)
         return [luigi.LocalTarget(_)
                 for _ in ofiles]
@@ -68,8 +65,8 @@ class get_tree(base_luigi_task):
         if self.dry_run:
             pass
         for k, f in self.input().items():
-            if not '_rep' in k:
-                continue
+            # if not '_rep' in k:
+            #     continue
             if type(f) == list:
                 ofile = f[0].path
             else:

@@ -1,7 +1,6 @@
 from os.path import dirname,join
 from . import soft_db_path
 from . import default_file_structures
-from . import default_params
 import luigi
 from tasks.basic_tasks import base_luigi_task
 from toolkit import run_cmd, valid_path,get_validate_path

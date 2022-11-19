@@ -11,6 +11,7 @@ __pycache__/
 # special
 /tutorial
 test_set/*run*/
+testdata
 luigi.cfg
 luigi_history.db
 param.template

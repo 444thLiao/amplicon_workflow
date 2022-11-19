@@ -12,7 +12,7 @@ usearch = soft_db_path.usearch_pth
 
 class usearch_filter(base_luigi_task):
     def requires(self):
-        from tasks import merged_reads
+        from tasks.for_preprocess import merged_reads
         return merged_reads(tab=self.tab,
                             odir=self.odir,
                             dry_run=self.dry_run,

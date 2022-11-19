@@ -5,7 +5,7 @@ sys.path.insert(0, dirname(__file__))
 import luigi
 import click
 from toolkit import run_cmd, get_dir_path,get_validate_path
-
+import warnings;warnings.filterwarnings('ignore')
 
 @click.group()
 def cli():
@@ -27,9 +27,9 @@ def test(odir, cmd, worker):
     project_root_path = get_dir_path(__file__, 1)
     cmd = " --local-scheduler" if cmd else ''
     cmd += " --workers {}".format(str(int(worker)))
-    run_cmd(
-        f"python3 {project_root_path}/main.py run -- workflow --tab {project_root_path}/testset/seq_data/data_input.tsv --odir {odir} --analysis-type all --log-path {odir}/cmd_log.txt " + cmd,
-        dry_run=False)
+    cmd =         f"python3 {project_root_path}/main.py run -- workflow --tab {project_root_path}/testset/seq_data/data_input.tsv --odir {odir} --analysis-type all --log-path {odir}/cmd_log.txt " + cmd
+    #print(cmd)
+    run_cmd(cmd,dry_run=True)
 
 
 class workflow(luigi.Task):
@@ -38,18 +38,22 @@ class workflow(luigi.Task):
     analysis_type = luigi.Parameter(default="otu")
     dry_run = luigi.BoolParameter(default=False)
     log_path = luigi.Parameter(default=None)
-    screen = luigi.Parameter(default=False)
+    screen = luigi.Parameter(default=None)
+    config = luigi.Parameter(default=None)
+    
     
     def requires(self):
+
         from tasks.unify_postanalysis import get_tree
         kwargs = dict(odir=get_validate_path(self.odir),
                       tab=get_validate_path(self.tab),
                       dry_run=self.dry_run,
                       log_path=self.log_path,
-                      screen=self.screen)
+                      screen=self.screen,
+                      config=self.config)
         return get_tree(analysis_type=self.analysis_type,
                         **kwargs)
-
+        
     def run(self):
         pass
 

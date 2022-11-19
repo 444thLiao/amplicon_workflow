@@ -1,5 +1,4 @@
 import luigi
-
 from toolkit import run_cmd
 from os.path import *
 import os,sys
@@ -11,6 +10,7 @@ class base_luigi_task(luigi.Task):
     log_path = luigi.Parameter(default=None)
     screen = luigi.Parameter(default=False)
     config = luigi.Parameter(default=False)
+    config_params = luigi.Parameter(default=False)
     
     def get_log_path(self):
         base_log_path = self.log_path
@@ -21,32 +21,52 @@ class base_luigi_task(luigi.Task):
         kwargs = dict(odir=self.odir,
                       tab=self.tab,
                       dry_run=self.dry_run,
-                      log_path=self.log_path)
+                      log_path=self.log_path,
+                      config=self.config,
+                      config_params=self.config_params)
         return kwargs
 
     def get_config(self):
-        if not self.config:
-            self.config_p = f"{dirname(dirname(__file__))+'/config/default_params.py'}"
-        else:
+        self.config_p = f"{dirname(dirname(__file__))+'/config/default_params.py'}"
+        sys.path.insert(0,dirname(dirname(__file__))+'/config')
+        import config.default_params as config_params        
+        if self.config:
             self.config_p = self.config
+            os.makedirs(join(self.odir,'tmp_import'),exist_ok=True)
+            os.system(f"cat {self.config_p} > {join(self.odir,'tmp_import','__init__.py')}")
+            sys.path.insert(0,realpath(self.odir))
+            
+            import tmp_import as new_params
+            for aparam in dir(new_params):
+                if '__'  in aparam or aparam not in dir(config_params): continue
+                if type(getattr(config_params,aparam))==dict:
+                    getattr(config_params,aparam).update( getattr(new_params,aparam))
+                else:
+                    setattr(config_params,aparam,getattr(new_params,aparam))
+            os.system(f"rm -r {join(self.odir,'tmp_import')}")
+        self.config_params = config_params
         
-        os.makedirs(join(self.odir,'tmp_import'))
-        os.system(f"cat {self.config_p} > {join(self.odir,'tmp_import','__init__.py')}")
-        sys.insert(0,join(self.odir,'tmp_import'))
-        import tmp_import as config_params
         
-        
-    def get_params(self,arg):
-        
-        return self.config_params.get(arg,'')
-    
-    def batch_get_params(self,):
+    def get_config_params(self,arg):
+        if type(arg) == str:
+            if arg in dir(self.config_params):
+                return getattr(self.config_params,arg)
+        else:
+            return getattr(self.config_params,arg[0])[arg[1]]
+            
+    def batch_get_config_params(self,name,new_key={}):
+        params_dict = getattr(self.config_params,name)
+        for k,v in new_key.items():
+            params_dict[k] = v
+
         extra_str = ''
-        for p, val in self.config_params.join_params.items():
+        for p, val in params_dict.items():
             if val is True:
-                extra_str += ' --p-%s' % p
+                extra_str += ' --p-%s' % p.replace('_','-')
             elif val is not None and val is not False:
-                extra_str += ' --p-%s %s ' % (p, val)        
+                extra_str += ' --p-%s %s ' % (p.replace('_','-'), val)        
+        return extra_str
+    
 class visulize_seq(base_luigi_task):
     """
     mainly for visualizing SingleFastqFormat qza

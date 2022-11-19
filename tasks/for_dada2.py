@@ -17,13 +17,10 @@ class run_dada2(base_luigi_task):
     mission = 'dada2'
 
     def requires(self):
-        from tasks import import_data
-        tasks = {}
-        tasks['import'] = import_data(tab=self.tab,
-                           odir=self.odir,
-                           dry_run=self.dry_run,
-                           log_path=self.log_path)
+        from tasks.for_preprocess import import_data
         kwargs = self.get_kwargs()
+        tasks = {}
+        tasks['import'] = import_data(**kwargs)
         tasks["fastqc_after"] = multiqc(status='after',
                                          **kwargs)
         return tasks
@@ -54,22 +51,12 @@ class run_dada2(base_luigi_task):
         r1_min_len = int(_df.loc[r1_names,'avg_sequence_length'].min())
         r2_min_len = int(_df.loc[r2_names,'avg_sequence_length'].min())
         
-        extra_str = self.batch_get_params('dada2_args')
-        extra_str += ' --p-trunc_len_f' + ' ' + str(r1_min_len)
-        extra_str += ' --p-trunc_len_r' + ' ' + str(r2_min_len)
-        # _d = config.dada2_args
-        # _d['trunc_len_f'] = r1_min_len
-        # _d['trunc_len_r'] = r2_min_len
-        # extra_str = ''
-        # for p, val in _d.items():
-        #     p = p.replace('_', '-')
-        #     if val is True:
-        #         extra_str += ' --p-%s' % p
-        #     elif val is not None and val is not False:
-        #         extra_str += ' --p-%s %s ' % (p, val)
+        extra_str = self.batch_get_config_params('dada2_args',
+                                                 {'trunc_len_f':r1_min_len,
+                                                  'trunc_len_r':r2_min_len,})
         
         cmd = """{qiime2_p} dada2 denoise-paired --i-demultiplexed-seqs {input_file} --o-representative-sequences {rep_seq} --o-table {profiling_tab} --o-denoising-stats {stats_file} --verbose""".format(
-            qiime2_p=self.get_params('qiime2_p'),
+            qiime2_p=self.get_config_params('qiime2_p'),
             input_file=self.input()['import'].path,
             profiling_tab=self.output()[0].path,
             rep_seq=self.output()[1].path,
@@ -88,26 +75,17 @@ class run_dada2(base_luigi_task):
 
 class view_rep_seq(tabulate_seq):
     def requires(self):
-        kwargs = dict(tab=self.tab,
-                      odir=self.odir,
-                      dry_run=self.dry_run,
-                      log_path=self.log_path)
+        
+        kwargs = self.get_kwargs()
         return run_dada2(**kwargs)
     def output(self):
         return luigi.LocalTarget(self.input()[1].path.replace(".qza", ".qzv"))
 
 
-class dada2_summarize(luigi.Task):
-    tab = luigi.Parameter()
-    odir = luigi.Parameter()
-    dry_run = luigi.BoolParameter()
-    log_path = luigi.Parameter(default=None)
+class dada2_summarize(base_luigi_task):
 
     def requires(self):
-        kwargs = dict(tab=self.tab,
-                      odir=self.odir,
-                      dry_run=self.dry_run,
-                      log_path=self.log_path)
+        kwargs = self.get_kwargs()
         required_tasks = {}
         required_tasks["dada2"] = run_dada2(**kwargs)
         required_tasks["view_rep_seq"] = view_rep_seq(**kwargs)
