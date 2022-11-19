@@ -1,7 +1,8 @@
 import luigi
 
 from toolkit import run_cmd
-
+from os.path import *
+import os,sys
 
 class base_luigi_task(luigi.Task):
     odir = luigi.Parameter()
@@ -9,6 +10,7 @@ class base_luigi_task(luigi.Task):
     dry_run = luigi.BoolParameter(default=False)
     log_path = luigi.Parameter(default=None)
     screen = luigi.Parameter(default=False)
+    config = luigi.Parameter(default=False)
     
     def get_log_path(self):
         base_log_path = self.log_path
@@ -22,7 +24,29 @@ class base_luigi_task(luigi.Task):
                       log_path=self.log_path)
         return kwargs
 
-
+    def get_config(self):
+        if not self.config:
+            self.config_p = f"{dirname(dirname(__file__))+'/config/default_params.py'}"
+        else:
+            self.config_p = self.config
+        
+        os.makedirs(join(self.odir,'tmp_import'))
+        os.system(f"cat {self.config_p} > {join(self.odir,'tmp_import','__init__.py')}")
+        sys.insert(0,join(self.odir,'tmp_import'))
+        import tmp_import as config_params
+        
+        
+    def get_params(self,arg):
+        
+        return self.config_params.get(arg,'')
+    
+    def batch_get_params(self,):
+        extra_str = ''
+        for p, val in self.config_params.join_params.items():
+            if val is True:
+                extra_str += ' --p-%s' % p
+            elif val is not None and val is not False:
+                extra_str += ' --p-%s %s ' % (p, val)        
 class visulize_seq(base_luigi_task):
     """
     mainly for visualizing SingleFastqFormat qza

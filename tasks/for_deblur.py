@@ -7,7 +7,6 @@ import luigi
 from config import soft_db_path
 from tasks.basic_tasks import base_luigi_task,tabulate_seq,visulize_seq
 from toolkit import run_cmd, valid_path
-import config.default_params as config
 from static.q2_function import convert2otutab, convert2seq,convert2table
 
 
@@ -32,13 +31,8 @@ class joined_fastq(base_luigi_task):
         valid_path(ofile, check_ofile=1)
         return luigi.LocalTarget(ofile)
 
-    def run(self):
-        extra_str = ''
-        for p, val in config.join_params.items():
-            if val is True:
-                extra_str += ' --p-%s' % p
-            elif val is not None and val is not False:
-                extra_str += ' --p-%s %s ' % (p, val)
+    def run(self):         
+        extra_str = self.batch_get_params('join_params')
         cmd = "{qiime2_p} vsearch join-pairs --i-demultiplexed-seqs {input_file} --o-joined-sequences {ofile}".format(
             qiime2_p=config.qiime2_p,
             input_file=self.input().path,
@@ -63,15 +57,9 @@ class qualityFilter(base_luigi_task):
                                                            "joined_qc_seq"))
 
     def run(self):
-        extra_str = ''
-        for p, val in config.qc_joined_params.items():
-            p = p.replace('_', '-')
-            if val is True:
-                extra_str += ' --p-%s' % p
-            elif val is not None and val is not False:
-                extra_str += ' --p-%s %s ' % (p, val)
+        extra_str = self.batch_get_params('qc_joined_params')
         cmd = "{qiime2_p} quality-filter q-score --i-demux {input_qza} --o-filtered-sequences {output_seq} --o-filter-stats {output_stats}".format(
-            qiime2_p=config.qiime2_p,
+            qiime2_p=self.get_params('qiime2_p'),
             input_qza=self.input().path,
             output_seq=self.output().path,
             output_stats=self.output().path.replace(
@@ -110,16 +98,9 @@ class run_deblur(base_luigi_task):
 
     def run(self):
         valid_path(self.output()[0].path, check_ofile=1)
-        extra_str = ''
-        for p, val in config.deblur_args.items():
-            p = p.replace('_', '-')
-            if val is True:
-                extra_str += ' --p-%s' % p
-            elif val is not None and val is not False:
-                extra_str += ' --p-%s %s ' % (p, val)
-
+        extra_str = self.batch_get_params('deblur_args')
         cmd = """{qiime2_p} deblur denoise-16S --i-demultiplexed-seqs {input_file} --o-representative-sequences {rep_seq} --o-table {profiling_tab} --o-stats {stats_file}""".format(
-            qiime2_p=config.qiime2_p,
+            qiime2_p=self.get_params('qiime2_p'),
             input_file=self.input().path,
             rep_seq=self.output()[1].path,
             profiling_tab=self.output()[0].path,

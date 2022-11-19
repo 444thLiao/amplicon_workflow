@@ -44,7 +44,7 @@ def regular_analysis(OTU_table, rep_fa, outputdir, draw_pd=False):
 
     sintax = os.path.join(outputdir, 'sintax.txt')
     os.system('%s -cluster_agg %s -treeout %s' % (USEARCH,
-                                                  rep_fa,
+                                       0.           rep_fa,
                                                   output_tree))
     os.system("%s -alpha_div %s -output '%s'" % (USEARCH,
                                                  OTU_table,

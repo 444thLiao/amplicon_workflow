@@ -74,7 +74,6 @@ def get_rank(tax):
         info[rank] = (name, float(confidence))
     return info
 
-
 def summarize_tax(sintax, otutab, odir, level='gpf',threadhold=0.8):
     otu2tax = get_tax(sintax, threadhold)
     otu2tax = {k.split(';')[0]:v for k,v in otu2tax.items()}

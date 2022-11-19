@@ -7,6 +7,11 @@ from tqdm import tqdm
 import gzip
 from Bio import SeqIO
 from subprocess import check_call
+import config.default_params as config
+
+
+trunclen = config.vesearch_args['trunclen']
+cluster_ratio = config.vesearch_args['cluster_ratio']
 
 
 def task_screen(indir, joined_seq_path):
@@ -43,7 +48,7 @@ def task_merge(indir, dirpath):
 def task_filter(indir):
     input = os.path.join(indir, merged_dir, merged_file)
     output = os.path.join(indir, merged_dir, filtered_file)
-    cmd = "{vsearch} --fastx_filter {input} --fastq_maxee 1.0 --fastq_trunclen 240 --fastaout {output}".format(input=input,
+    cmd = "{vsearch} --fastx_filter {input} --fastq_maxee 1.0 --fastq_trunclen {trunclen} --fastaout {output}".format(input=input,
                                                                                                              output=output)
     check_call(cmd, shell=True)
 
@@ -58,7 +63,7 @@ def task_derep(indir):
 
 def task_remove_chimer():
     cmd = """{vsearch} --cluster_size splited/derep.fa \
-	--id 0.97 --sizeout --fasta_width 0 \
+	--id {cluster_ratio} --sizeout --fasta_width 0 \
 	--uc v_analysis/all.preclustered.uc \
 	--centroids v_analysis/all.preclustered.fasta"""
     cmd2 = """{vsearch} --uchime_deno v_analysis/all.preclustered.fasta \
@@ -72,11 +77,11 @@ def task_remove_chimer():
 
 
 def task_clustering():
-    cmd = """{vsearch} --cluster_size v_analysis/all.nonchimeras.fasta --id 0.97 \
+    cmd = """{vsearch} --cluster_size v_analysis/all.nonchimeras.fasta --id {cluster_ratio} \
 	--sizein --sizeout --fasta_width 0 \
 	--uc v_analysis/all.clustered.uc \
 	--relabel OTU --centroids v_analysis/all.otus.fasta"""
-    cmd2 = """{vsearch} --usearch_global splited/filtered_uparsed.fa --db v_analysis/all.otus.fasta --strand plus --id 0.97 --uc v_analysis/map.txt --otutabout v_analysis/otu_raw.tab    """
+    cmd2 = """{vsearch} --usearch_global splited/filtered_uparsed.fa --db v_analysis/all.otus.fasta --strand plus --id {cluster_ratio} --uc v_analysis/map.txt --otutabout v_analysis/otu_raw.tab    """
 
 
 def perform_vsearch_pipelines(vsearch_path='/usr/bin/vsearch',

@@ -7,10 +7,13 @@ from tasks.basic_tasks import base_luigi_task
 from toolkit import run_cmd, valid_path
 from Bio import SeqIO
 
-
 vsearch = soft_db_path.vsearch_pth
 rdp_gold = soft_db_path.rdp_gold_pth
 map_pl = soft_db_path.map_pl_pth
+
+
+# trunclen = config.vesearch_args['trunclen']
+# cluster_ratio = config.vesearch_args['cluster_ratio']
 
 
 #
@@ -86,14 +89,15 @@ class vsearch_filter(base_luigi_task):
         return luigi.LocalTarget(ofile)
 
     def run(self):
-        # cmd = "vsearch --fastx_filter {input} --fastq_maxee 1.0 --fastq_trunclen 240 --fastaout {output}".format(input=input,output=output)
+        # cmd = "vsearch --fastx_filter {input} --fastq_maxee 1.0 --fastq_trunclen xx --fastaout {output}".format(input=input,output=output)
         merged_fa = self.input().path
         filtered_fa = self.output().path
         total_len = int(os.popen(f"grep -c '^+$' {merged_fa}").read().strip())
         length_dis = [len(_.seq) for _ in SeqIO.parse(merged_fa,'fastq')]
         
+        trunclen = self.get_params('trunclen')
         valid_path(filtered_fa, check_ofile=1)
-        cmd = f"{vsearch} --fastx_filter {merged_fa} --fastq_maxee 1.0 --fastq_trunclen 240 --fastaout {filtered_fa}"
+        cmd = f"{vsearch} --fastx_filter {merged_fa} --fastq_maxee 1.0 --fastq_trunclen {trunclen} --fastaout {filtered_fa}"
         run_cmd(cmd,
                 dry_run=self.dry_run,
                 log_file=self.get_log_path())
@@ -169,14 +173,14 @@ class vsearch_pre_cluster(base_luigi_task):
 
     def run(self):
         # cmd = """vsearch --cluster_size splited/derep.fa \
-        # 	--id 0.97 --sizeout --fasta_width 0 \
+        # 	--id xxx --sizeout --fasta_width 0 \
         # 	--uc v_analysis/all.preclustered.uc \
         # 	--centroids v_analysis/all.preclustered.fasta"""
         derep_fa = self.input()[0].path
         precluster_uc = self.output()[1].path
         precluster_fa = self.output()[0].path
-
-        cmd = f"{vsearch} --cluster_size {derep_fa} --id 0.97 --sizeout --fasta_width 0 --uc {precluster_uc} --centroids {precluster_fa}"
+        cluster_ratio = self.get_params('cluster_ratio')
+        cmd = f"{vsearch} --cluster_size {derep_fa} --id {cluster_ratio} --sizeout --fasta_width 0 --uc {precluster_uc} --centroids {precluster_fa}"
         run_cmd(cmd, dry_run=self.dry_run, log_file=self.get_log_path())
 
         if self.dry_run:
@@ -316,7 +320,8 @@ class vsearch_cluster(base_luigi_task):
         rep_fa = self.output()[0].path
         cluster_uc = self.output()[1].path
         valid_path([rep_fa, cluster_uc], check_ofile=1)
-        cmd = f"{vsearch} --cluster_size {nonchimera_fa} --id 0.97 --sizein --sizeout --fasta_width 0 --uc {cluster_uc} --relabel OTU --centroids {rep_fa}"
+        cluster_ratio = self.get_params('cluster_ratio')
+        cmd = f"{vsearch} --cluster_size {nonchimera_fa} --id {cluster_ratio} --sizein --sizeout --fasta_width 0 --uc {cluster_uc} --relabel OTU --centroids {rep_fa}"
 
         run_cmd(cmd, dry_run=self.dry_run, log_file=self.get_log_path())
 
@@ -354,7 +359,8 @@ class vsearch_otutable(base_luigi_task):
         map_output = self.output()[1].path
         raw_otutab = self.output()[0].path
         valid_path([map_output, raw_otutab], check_ofile=1)
-        cmd = f"{vsearch} --usearch_global {filtered_fa} --db {rep_fa} --strand plus --id 0.97 --uc {map_output} --otutabout {raw_otutab}"
+        cluster_ratio = self.get_params('cluster_ratio')
+        cmd = f"{vsearch} --usearch_global {filtered_fa} --db {rep_fa} --strand plus --id {cluster_ratio} --uc {map_output} --otutabout {raw_otutab}"
 
         run_cmd(cmd, dry_run=self.dry_run, log_file=self.get_log_path())
 

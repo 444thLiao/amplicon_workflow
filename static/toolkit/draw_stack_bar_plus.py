@@ -3,8 +3,6 @@ Stacked bar plot for summarizing the taxonomic classification of 16S analysis
 
 """
 
-from sys import settrace
-import plotly
 import random
 import os
 from plotly import graph_objs as go
@@ -24,7 +22,6 @@ def read_data(fp):
         first = pd.read_excel(fp)
 
     return first
-
 
 def parse_data(tax, tax_otu_sub, colors):
     bucket = []
@@ -144,7 +141,6 @@ def generate_html(tax_otutabs):
         colors = colors.as_hex()
 
         if tax_names == 'family':
-            
             family_dis = parse_data(tax_names, tax_otu_sub, colors)
         elif tax_names == 'genus':
             genus_dis = parse_data(tax_names, tax_otu_sub, colors)

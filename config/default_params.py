@@ -1,6 +1,7 @@
 # 输入
 import os
 from .soft_db_path import qiime_env
+
 qiime2_p = "source activate %s; qiime " % qiime_env
 
 ############################################################
@@ -78,6 +79,10 @@ qc_joined_params = dict(
     min_length_fraction=0.75,  # default
     max_ambiguous=0,  # default
 )
+
+vesearch_args = dict(trunclen=240,
+                     cluster_ratio=0.97
+                     )
 
 deblur_args = dict(
     # deblur
