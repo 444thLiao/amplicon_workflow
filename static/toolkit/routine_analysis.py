@@ -16,7 +16,7 @@ draw_rarefraction  = f"{os.path.dirname(__file__)}/rarefraction.py "
 
 draw_PD = "/home/liaoth/project/16s_pipelines/microbiome_utils/Visualization/draw_PD.py"
 
-def regular_analysis(OTU_table, rep_fa, outputdir, draw_pd=False):
+def regular_analysis(OTU_table, rep_fa, outputdir, draw_pd=False,simple=True):
     """
     OTU_TABLE is normalize and filtered.
     :param OTU_table:
@@ -48,7 +48,8 @@ def regular_analysis(OTU_table, rep_fa, outputdir, draw_pd=False):
     output_tree = os.path.join(outputdir, 'otus.tree')
 
     sintax = os.path.join(outputdir, 'sintax.txt')
-    os.system('%s -cluster_agg %s -treeout %s' % (USEARCH,
+    if not simple:
+        os.system('%s -cluster_agg %s -treeout %s' % (USEARCH,
                                                   rep_fa,
                                                   output_tree))
     os.system("%s -alpha_div %s -output '%s'" % (USEARCH,
@@ -58,24 +59,24 @@ def regular_analysis(OTU_table, rep_fa, outputdir, draw_pd=False):
                                                                   OTU_table,
                                                                   output_tree,
                                                                   outputdir + '/beta_diversity/'))
-    
-    os.system("%s -sintax %s -db %s -strand both -tabbedout %s -sintax_cutoff 0.8" % (USEARCH,
+    if not simple:
+        os.system("%s -sintax %s -db %s -strand both -tabbedout %s -sintax_cutoff 0.8" % (USEARCH,
                                                                                       rep_fa,
                                                                                       RDP_DB,
                                                                                       sintax))
     os.system("%s -alpha_div_rare %s -output %s/rare.txt" % (USEARCH,
                                                              OTU_table,
                                                              outputdir + '/rarefaction'))
+    if not simple:
+        tax_summary_out_file = os.path.join(outputdir + '/taxonomy_report')
 
-    tax_summary_out_file = os.path.join(outputdir + '/taxonomy_report')
+        summarize_tax(sintax,
+                        OTU_table,
+                        tax_summary_out_file,
+                        level='gpf')
 
-    summarize_tax(sintax,
-                    OTU_table,
-                    tax_summary_out_file,
-                    level='gpf')
-
-    os.system('python3 %s %s' %
-                (draw_stack_dis, os.path.join(outputdir + '/taxonomy_report')))
+        os.system('python3 %s %s' %
+                    (draw_stack_dis, os.path.join(outputdir + '/taxonomy_report')))
     os.system('python3 %s %s' %
                 (draw_rarefraction, os.path.join(outputdir + '/rarefaction/rare.txt')))
     
@@ -103,13 +104,15 @@ if __name__ == '__main__':
                         help="output Dir path")
     parser.add_argument('-rc', dest='rarefaction', action='store_true',
                         help="if you want to draw a rarefaction curve(which will take long time. But it will have a progress bar to display its.)")
+    parser.add_argument('-s', dest='simple', action='store_true',
+                        help="no annotation. only run alpha and rarefaction")    
     args = parser.parse_args()
 
     otu_tab = os.path.abspath(args.otutab)
     fasta = os.path.abspath(args.fasta)
     odir = os.path.abspath(args.odir)
     draw_rc = args.rarefaction
-
-    regular_analysis(otu_tab, fasta, odir, draw_pd=draw_rc)
+    simple = args.simple
+    regular_analysis(otu_tab, fasta, odir, draw_pd=draw_rc,simple=simple)
 
     # python ~/software/16s_workflow/static/toolkit/routine_analysis.py -i ./profiling.csv -fa rep.fa -o ./routine
