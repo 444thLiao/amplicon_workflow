@@ -35,9 +35,11 @@ def regular_analysis(OTU_table, rep_fa, outputdir, draw_pd=False,simple=True):
         with open(OTU_table,'w') as f1:
             f1.write('\n'.join(contents))
     df = pd.read_csv(OTU_table,sep='\t',index_col=0)
-    if df.shape[0]>df.shape[1]:
-        df.to_csv(OTU_table,sep='\t',index=1,index_label=df.index.name)
+    if df.shape[0]<df.shape[1]:
+        # row index should be the OTU which are much more than the column names
+        df.T.to_csv(OTU_table,sep='\t',index=1,index_label=df.index.name)
     else:
+        # normal, keep stil
         pass
     
     os.system('mkdir -p %s;' % (outputdir + '/beta_diversity'))
