@@ -36,7 +36,7 @@ def regular_analysis(OTU_table, rep_fa, outputdir, draw_pd=False,simple=True):
             f1.write('\n'.join(contents))
     df = pd.read_csv(OTU_table,sep='\t',index_col=0)
     if df.shape[0]>df.shape[1]:
-        df.T.to_csv(OTU_table,sep='\t',index=1,index_label=df.index.name)
+        df.to_csv(OTU_table,sep='\t',index=1,index_label=df.index.name)
     else:
         pass
     
