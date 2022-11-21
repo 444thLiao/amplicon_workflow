@@ -6,7 +6,7 @@ sys.path.insert(0,
 
 import argparse
 from toolkit.summarize_tax_report import summarize_tax
-
+import pandas as pd
 
 
 USEARCH = os.popen(f"which usearch").read().strip()
@@ -34,6 +34,11 @@ def regular_analysis(OTU_table, rep_fa, outputdir, draw_pd=False):
         contents = [fr] + c[1:]
         with open(OTU_table,'w') as f1:
             f1.write('\n'.join(contents))
+    df = pd.read_csv(OTU_table,sep='\t',index_col=0)
+    if df.shape[0]>df.shape[1]:
+        df.T.to_csv(OTU_table,sep='\t',index=1,index_label=df.index.name)
+    else:
+        pass
     
     os.system('mkdir -p %s;' % (outputdir + '/beta_diversity'))
     os.system('mkdir -p %s;' % (outputdir + '/alpha_diversity'))
@@ -44,7 +49,7 @@ def regular_analysis(OTU_table, rep_fa, outputdir, draw_pd=False):
 
     sintax = os.path.join(outputdir, 'sintax.txt')
     os.system('%s -cluster_agg %s -treeout %s' % (USEARCH,
-                                       0.           rep_fa,
+                                                  rep_fa,
                                                   output_tree))
     os.system("%s -alpha_div %s -output '%s'" % (USEARCH,
                                                  OTU_table,
