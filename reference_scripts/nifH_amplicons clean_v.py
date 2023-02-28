@@ -64,6 +64,7 @@ def get_region(seq, f, r,include_primer=False):
                  1 else f"[{tmp_d.get(l,l)}]" for l in f])
     r = ''.join([l if len(tmp_d.get(l, l)) ==
                  1 else f"[{tmp_d.get(l,l)}]" for l in r])
+    #print(f,r)
     if include_primer:
         matched_seq = re.search(f'({f}[ATCG]*{r})', seq)
     else:

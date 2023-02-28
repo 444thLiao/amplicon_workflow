@@ -12,10 +12,12 @@ class get_tree(base_luigi_task):
         kwargs = self.get_kwargs()
         required_tasks = {}
         
-        antype = str(self.analysis_type).lower()
-        if antype not in ["all", "otu", "deblur", "dada2",'usearch','qc']:
+        
+        antype = str(self.analysis_type).lower().split(',')
+        
+        if len(set(antype).intersection(set(["all", "otu", "deblur", "dada2",'usearch','qc'])))==0:
             raise Exception("analysis type must be one of the `all,otu,deblur,dada2`")
-        if antype=='qc':
+        if 'qc' in antype:
             from tasks.for_preprocess import multiqc
             required_tasks["fastqc_before"] = multiqc(status='before',
                                                     **kwargs
@@ -26,17 +28,17 @@ class get_tree(base_luigi_task):
             return required_tasks
         #####
         
-        if antype == "otu" or antype == "all":
+        if  "otu"  in antype or  "all" in antype:
             from tasks.for_otu import vsearch_otutable
             required_tasks["otu"] = vsearch_otutable(**kwargs)
             required_tasks["otu"] = vsearch_otutable(**kwargs)
-        if antype == "dada2" or antype == "all":
+        if "dada2" in antype or  "all" in antype:
             from tasks.for_dada2 import dada2_summarize
             required_tasks["dada2"] = dada2_summarize(**kwargs)
-        if antype == "deblur" or antype == "all":
+        if "deblur" in antype or  "all" in antype:
             from tasks.for_deblur import deblur_summarize
             required_tasks["deblur"] = deblur_summarize(**kwargs)
-        if antype == "usearch" or antype == "all":
+        if "usearch" in antype or  "all" in antype:
             from tasks.for_usearch import usearch_OTU_table,usearch_zOTU_table,usearch_denoise,usearch_OTU
             required_tasks["usearch_OTU"] = usearch_OTU_table(**kwargs)
             required_tasks["usearch_OTU_rep"] = usearch_OTU(**kwargs)

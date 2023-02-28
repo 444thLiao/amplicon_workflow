@@ -13,10 +13,8 @@ usearch = soft_db_path.usearch_pth
 class usearch_filter(base_luigi_task):
     def requires(self):
         from tasks.for_preprocess import merged_reads
-        return merged_reads(tab=self.tab,
-                            odir=self.odir,
-                            dry_run=self.dry_run,
-                            log_path=self.log_path)
+        kwargs = self.get_kwargs()
+        return merged_reads(**kwargs)
 
     def output(self):
         odir = join(str(self.odir),
@@ -42,10 +40,8 @@ class usearch_filter(base_luigi_task):
 class usearch_derep(base_luigi_task):
 
     def requires(self):
-        return usearch_filter(tab=self.tab,
-                              odir=self.odir,
-                              dry_run=self.dry_run,
-                              log_path=self.log_path)
+        kwargs = self.get_kwargs()
+        return usearch_filter(**kwargs)
 
     def output(self):
         odir = join(str(self.odir), "USEARCH",)
@@ -66,10 +62,8 @@ class usearch_derep(base_luigi_task):
 
 class usearch_OTU(base_luigi_task):
     def requires(self):
-        return usearch_derep(tab=self.tab,
-                             odir=self.odir, 
-                             dry_run=self.dry_run,
-                             log_path=self.log_path)
+        kwargs = self.get_kwargs()
+        return usearch_derep(**kwargs)
     def output(self):
         odir = join(str(self.odir), "USEARCH","OTU")
         ofile = join(odir, 'otus_rep.fa')
@@ -90,9 +84,10 @@ class usearch_OTU(base_luigi_task):
 
 class usearch_OTU_table(base_luigi_task):
     def requires(self):
+        kwargs = self.get_kwargs()
         required_task = {}
-        required_task["filtered"] = usearch_filter(tab=self.tab,odir=self.odir, dry_run=self.dry_run, log_path=self.log_path)
-        required_task["OTU_rep"] = usearch_OTU(tab=self.tab,odir=self.odir, dry_run=self.dry_run, log_path=self.log_path)
+        required_task["filtered"] = usearch_filter(**kwargs)
+        required_task["OTU_rep"] = usearch_OTU(**kwargs)
         return required_task
 
     def output(self):
@@ -116,10 +111,8 @@ class usearch_OTU_table(base_luigi_task):
 ## denoise part
 class usearch_denoise(base_luigi_task):
     def requires(self):
-        return usearch_derep(tab=self.tab,
-                             odir=self.odir, 
-                             dry_run=self.dry_run,
-                             log_path=self.log_path)
+        kwargs = self.get_kwargs()
+        return usearch_derep(**kwargs)
 
     def output(self):
         odir = join(str(self.odir),"USEARCH",'zotu')
@@ -152,9 +145,10 @@ class usearch_denoise(base_luigi_task):
 
 class usearch_zOTU_table(base_luigi_task):
     def requires(self):
+        kwargs = self.get_kwargs()
         required_task = {}
-        required_task["filtered"] = usearch_filter(tab=self.tab,odir=self.odir, dry_run=self.dry_run, log_path=self.log_path)
-        required_task["zOTU_rep"] = usearch_denoise(tab=self.tab,odir=self.odir, dry_run=self.dry_run, log_path=self.log_path)
+        required_task["filtered"] = usearch_filter(**kwargs)
+        required_task["zOTU_rep"] = usearch_denoise(**kwargs)
         return required_task
 
     def output(self):

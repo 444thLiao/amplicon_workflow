@@ -35,7 +35,6 @@ class base_luigi_task(luigi.Task):
             os.makedirs(join(self.odir,'tmp_import'),exist_ok=True)
             os.system(f"cat {self.config_p} > {join(self.odir,'tmp_import','__init__.py')}")
             sys.path.insert(0,realpath(self.odir))
-            
             import tmp_import as new_params
             for aparam in dir(new_params):
                 if '__'  in aparam or aparam not in dir(config_params): continue
