@@ -458,11 +458,21 @@ class import_data(base_luigi_task):
         kwargs = self.get_kwargs()
         tasks = {}
         for sid in R1_dict.keys():
-            tasks[sid] = QC_aft_screened(sampleid=sid,
-                                         PE1=R1_dict[sid],
-                                         PE2=R2_dict[sid],
-                                         **kwargs
-                                         )
+            if self.screen:
+                tasks[sid]= QC_aft_screened(sampleid=sid,
+                                PE1=R1_dict[sid],
+                                PE2=R2_dict[sid],
+                                **kwargs)
+            else:
+                tasks[sid]= QC_trimmomatic(sampleid=sid,
+                                PE1=R1_dict[sid],
+                                PE2=R2_dict[sid],
+                                **kwargs)            
+            # tasks[sid] = QC_aft_screened(sampleid=sid,
+            #                              PE1=R1_dict[sid],
+            #                              PE2=R2_dict[sid],
+            #                              **kwargs
+            #                              )
         return tasks
 
     def output(self):
