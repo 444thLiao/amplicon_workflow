@@ -6,7 +6,7 @@ from toolkit import run_cmd,valid_path
 
 class get_tree(base_luigi_task):
     analysis_type = luigi.Parameter(default="otu")
-
+    
     def requires(self):
         self.get_config()
         kwargs = self.get_kwargs()
@@ -69,8 +69,7 @@ class get_tree(base_luigi_task):
         if self.dry_run:
             pass
         for k, f in self.input().items():
-            # if not '_rep' in k:
-            #     continue
+            if k in ['usearch_OTU','usearch_zOTU']:continue
             if type(f) == list:
                 ofile = f[0].path
             else:

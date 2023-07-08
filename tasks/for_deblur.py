@@ -136,8 +136,8 @@ class deblur_summarize(base_luigi_task):
     def output(self):
         otutab, rep, stats = [_.path
                               for _ in self.input()["deblur"]]
-        ofiles = [otutab.replace('.qza','.csv'),
-                  rep.replace('.qza','.fa'),
+        ofiles = [rep.replace('.qza','.fa'),
+                  otutab.replace('.qza','.csv'),
                   stats.replace('.qza','.csv'),
                   ]
         return [luigi.LocalTarget(_) for _ in ofiles]
