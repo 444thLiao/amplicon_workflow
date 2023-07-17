@@ -109,7 +109,8 @@ dada2_args = dict(
     max_ee_r=2.0,  # default
 )
 
-
+# usearch part
+maxee = 1.0
 
 # Not implement yet
 ## after profiling

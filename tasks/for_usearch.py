@@ -28,7 +28,8 @@ class usearch_filter(base_luigi_task):
         merged_fq = self.input().path
         filtered_fa = self.output().path
         valid_path(filtered_fa, check_ofile=1)
-        cmd = f"{usearch} -fastq_filter {merged_fq} -fastq_maxee 1.0 -fastaout {filtered_fa}"
+        maxee = self.get_config_params('maxee')
+        cmd = f"{usearch} -fastq_filter {merged_fq} -fastq_maxee {maxee} -fastaout {filtered_fa}"
         run_cmd(cmd,
                 dry_run=self.dry_run,
                 log_file=self.get_log_path())
