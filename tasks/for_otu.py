@@ -344,8 +344,10 @@ class vsearch_otutable(base_luigi_task):
         odir = join(str(self.odir),"OTU_pipelines", 'otu_output')
         ofile = join(odir, "OTU_rep.fasta")
         mapfile = join(odir, "raw_OTU.uc")
+        otab = join(odir, "otu_raw.tab")
         return [luigi.LocalTarget(ofile),
-                luigi.LocalTarget(mapfile)]
+                luigi.LocalTarget(mapfile),
+                luigi.LocalTarget(otab)]
 
     def run(self):
         # cmd2 = """vsearch --usearch_global splited/filtered_uparsed.fa --db v_analysis/all.otus.fasta --strand plus --id 0.97 --uc v_analysis/map.txt --otutabout v_analysis/otu_raw.tab    """
@@ -353,7 +355,7 @@ class vsearch_otutable(base_luigi_task):
         rep_fa = self.input()['cluster'][0].path
 
         map_output = self.output()[1].path
-        raw_otutab = self.output()[0].path
+        raw_otutab = self.output()[2].path
         valid_path([map_output, raw_otutab], check_ofile=1)
         cluster_ratio = self.get_config_params(('vesearch_args','cluster_ratio'))
         cmd = f"{vsearch} --usearch_global {filtered_fa} --db {rep_fa} --strand plus --id {cluster_ratio} --uc {map_output} --otutabout {raw_otutab}"

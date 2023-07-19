@@ -30,7 +30,6 @@ class get_tree(base_luigi_task):
         if  "otu"  in antype or  "all" in antype:
             from tasks.for_otu import vsearch_otutable
             required_tasks["otu"] = vsearch_otutable(**kwargs)
-            required_tasks["otu"] = vsearch_otutable(**kwargs)
         if "dada2" in antype or  "all" in antype:
             from tasks.for_dada2 import dada2_summarize
             required_tasks["dada2"] = dada2_summarize(**kwargs)

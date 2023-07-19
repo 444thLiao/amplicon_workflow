@@ -29,6 +29,12 @@ errR <- learnErrors(filtRs, multithread = TRUE)
 # dereplicate identical reads
 derepFs <- derepFastq(filtFs, verbose = TRUE)
 derepRs <- derepFastq(filtRs, verbose = TRUE)
+# for (i in 1:length(derepFs)){
+# m<-as.matrix(derepFs[[i]])
+# n <- names(derepFs)[i]
+# dir.create(file.path(odir,'derep'))
+# write.csv(m,file.path(odir,'derep',paste0(n,'.csv')), row.names = FALSE)
+# }
 
 # name derep-class objects by the sample names
 names(derepFs) <- indata$sample.ID
@@ -40,6 +46,13 @@ dadaRs <- dada(derepRs, err = errR, multithread = TRUE)
 
 # merge paired reads
 mergers <- mergePairs(dadaFs, derepFs, dadaRs, derepRs, verbose=TRUE)
+# for (i in 1:length(mergers)){
+# mergers1<-as.matrix(mergers[[i]])
+# n <- names(mergers)[i]
+# #print(n)
+# dir.create(file.path(odir,'merged'))
+# write.csv(mergers1,file.path(odir,'merged',paste0(n,'.csv')), row.names = FALSE)
+# }
 
 # construct sequence table
 seqtab <- makeSequenceTable(mergers)
@@ -57,11 +70,15 @@ dim(seqtab.nochim)
 sum(seqtab.nochim)/sum(seqtab)
 # track reads through the pipeline
 getN <- function(x) sum(getUniques(x))
-track <- cbind(sapply(dadaFs, getN),  sapply(mergers,getN), rowSums(seqtab.nochim))
+track <- cbind(
+    sapply(derepFs, getN),
+    sapply(dadaFs, getN),  
+    sapply(mergers,getN), 
+    rowSums(seqtab.nochim))
 
 
 # sapply(dadaFs, getN) with getN(dadaFs)
-colnames(track) <- c( "denoisedF", "merged","nonchim")
+colnames(track) <- c("dereplicateF", "denoisedF", "merged","nonchim")
 rownames(track) <- sample.names
 # kept the majority of our raw reads, run successfully
 
