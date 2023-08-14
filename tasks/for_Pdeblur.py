@@ -58,7 +58,7 @@ class custom_deblur(base_luigi_task):
         trunclen = self.get_config_params(('deblur_custom_args','trunclen'))
         deblur_ref = self.get_config_params(('deblur_custom_args','refdb'))
         jobs_to_start  = self.get_config_params(('deblur_custom_args','jobs_to_start'))
-        cmd = f"deblur workflow --seqs-fp {joined_dir} --output-dir {output_dir} --trim-length {trunclen} --pos-ref-fp {deblur_ref} -w -a 0 -O {jobs_to_start} --log-file {output_dir}/deblur.log"
+        cmd = f"deblur workflow --seqs-fp {joined_dir} --output-dir {output_dir} --trim-length {trunclen} --pos-ref-fp {deblur_ref} -w -a 0 -O {jobs_to_start} --log-file {output_dir}/../deblur.log"
         run_cmd(cmd, dry_run=self.dry_run, log_file=self.get_log_path())
 
         if self.dry_run:
