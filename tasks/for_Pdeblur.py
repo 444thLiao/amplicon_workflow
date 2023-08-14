@@ -53,7 +53,7 @@ class custom_deblur(base_luigi_task):
         return luigi.LocalTarget(ofile)
 
     def run(self):
-        joined_dir = dirname(list(self.input().items())[0])
+        joined_dir = dirname(list(self.input().items())[0].path)
         output_dir = dirname(self.output().path)
         trunclen = self.get_config_params(('deblur_custom_args','trunclen'))
         deblur_ref = self.get_config_params(('deblur_custom_args','refdb'))

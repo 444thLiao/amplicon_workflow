@@ -14,8 +14,8 @@ class get_tree(base_luigi_task):
         
         
         antype = str(self.analysis_type).lower().split(',')
-        if len(set(antype).intersection(set(["all", "otu", "deblur", "dada2",'usearch','qc','pdada2'])))==0:
-            raise Exception("analysis type must be one of the `all,otu,deblur,dada2`")
+        if len(set(antype).intersection(set(["all", "otu", "deblur", "dada2",'usearch','qc','pdada2','pdeblur'])))==0:
+            raise Exception("analysis type must be one of the `all,otu,deblur,dada2,pdada2,pdeblur`")
         if 'qc' in antype:
             from tasks.for_preprocess import multiqc
             required_tasks["fastqc_before"] = multiqc(status='before',
