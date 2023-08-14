@@ -86,7 +86,7 @@ class custom_deblur_parse(base_luigi_task):
 
     def run(self):
         infile = self.input().path
-        ofile = self.ouput()[1].path
+        ofile = self.output()[1].path
         cmd = f"biom convert -i {infile} -o {ofile} --to-tsv"
         run_cmd(cmd, dry_run=self.dry_run, log_file=self.get_log_path())
 
@@ -103,7 +103,7 @@ class custom_deblur_parse(base_luigi_task):
         d = pd.read_csv(ofile,sep='\t',index_col=0,names=names,comment='#')
         d.index = [seqmap[_] for _ in d.index]
         d.to_csv(ofile,sep='\t',index=1)
-        with open(self.ouput()[0].path,'w') as f1:
+        with open(self.output()[0].path,'w') as f1:
             SeqIO.write(tmp,f1,'fasta-2line')
 
         
