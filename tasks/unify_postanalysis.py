@@ -44,7 +44,10 @@ class get_tree(base_luigi_task):
             required_tasks["usearch_zOTU_rep"] = usearch_denoise(**kwargs)
         if "pdada2" in antype or  "all" in antype:
             from tasks.for_Pdada2 import run_Pdada2
-            required_tasks["run_Pdada2"] = run_Pdada2(**kwargs)      
+            required_tasks["run_Pdada2"] = run_Pdada2(**kwargs)     
+        if "pdeblur" in antype or  "all" in antype:
+            from tasks.for_Pdeblur import custom_deblur_parse
+            required_tasks["run_Pdeblur"] = custom_deblur_parse(**kwargs)               
         return required_tasks
 
     def output(self):

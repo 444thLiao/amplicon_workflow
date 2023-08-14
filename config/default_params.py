@@ -84,6 +84,12 @@ vesearch_args = dict(trunclen=240,
                      cluster_ratio=0.97
                      )
 
+deblur_custom_args = dict(trunclen=240,
+                          refdb='',
+                          jobs_to_start=7,
+                     )
+
+
 deblur_args = dict(
     # deblur
     trim_length=220,
