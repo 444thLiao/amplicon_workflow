@@ -104,7 +104,7 @@ class format_Pdada2(base_luigi_task):
         _ = df.pop('sum')
         _ = df.pop('Sequence')
         with open(rep_fasta,'w') as f1:
-            SeqIO.write(rep_fasta,'fasta-2line')
+            SeqIO.write(seqs,f1,'fasta-2line')
         df.to_csv(tab,sep='\t',index=0)  
         status = self.output()[3].path
         with open(status,'w') as f1:
