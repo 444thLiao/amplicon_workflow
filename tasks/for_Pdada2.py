@@ -61,3 +61,52 @@ class run_Pdada2(base_luigi_task):
         if self.dry_run:
             for _o in self.output():
                 run_cmd("touch %s" % _o.path, dry_run=False)
+
+
+
+
+class format_Pdada2(base_luigi_task):
+    mission = 'Pdada2'
+    def requires(self):
+        kwargs = self.get_kwargs()
+        return run_Pdada2(**kwargs)
+    
+    def output(self):
+        ofiles = list(map(luigi.LocalTarget,
+                          [join(self.odir,
+                                "%s_output" % self.mission,
+                                "rep.fasta"),
+                           join(self.odir,
+                                "%s_output" % self.mission,
+                                "ASV_table.tsv"),
+                           join(self.odir,
+                                "%s_output" % self.mission,
+                                "ASV_stats.txt"),
+                           join(self.odir,
+                                "%s_output" % self.mission,
+                                "parsed.ok")]
+                          ))
+        return ofiles
+
+    def run(self):
+        ######## unify the format of the output
+        from Bio import SeqIO
+        import pandas as pd
+        rep_fasta = self.output()[0].path
+        tab = self.output()[1].path
+        
+        seqs = list(SeqIO.parse(rep_fasta,'fasta'))
+        df = pd.read_csv(tab,sep='\t')
+        for r in seqs:
+            r.id = 'ASV' + '{n:06}'.format(n=int(r.id.replace('sq','').replace('OTU','').split(';')[0]))
+        seq2name = {str(r.seq):r.id for r in seqs}
+        df.index = [seq2name[_] for _ in df['Sequence']]
+        _ = df.pop('sum')
+        _ = df.pop('Sequence')
+        with open(rep_fasta,'w') as f1:
+            SeqIO.write(rep_fasta,'fasta-2line')
+        df.to_csv(tab,sep='\t',index=0)  
+        status = self.output()[3].path
+        with open(status,'w') as f1:
+            f1.write('ok')
+        
