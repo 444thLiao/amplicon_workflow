@@ -11,8 +11,7 @@ class get_tree(base_luigi_task):
         self.get_config()
         kwargs = self.get_kwargs()
         required_tasks = {}
-        
-        
+
         antype = str(self.analysis_type).lower().split(',')
         if len(set(antype).intersection(set(["all", "otu", "deblur", "dada2",'usearch','qc','pdada2','pdeblur','pusearch'])))==0:
             raise Exception("analysis type must be one of the `all,otu,deblur,dada2,pdada2,pdeblur,pusearch`")
@@ -77,12 +76,20 @@ class get_tree(base_luigi_task):
             if k in ['usearch_OTU','usearch_zOTU']:continue
             if type(f) == list:
                 ofile = f[0].path
+                otu_table = f[1].path
             else:
                 ofile = f.path
+                otu_table = ''
             odir = dirname(ofile)
             cmd = "{usearch} -cluster_agg {rep_fa} -treeout {otree}".format(
                     usearch=soft_db_path.usearch_pth,
                     rep_fa=ofile,
                     otree=join(odir,"rep.tree"),
                 )
+            run_cmd(cmd,log_file=self.get_log_path(),dry_run=self.dry_run)
+            
+            cmd = "{usearch} -alpha_div_rare {otu_table} -output {odir}/rarefaction.txt".format(
+                    usearch=soft_db_path.usearch_pth,
+                    otu_table=otu_table,
+                    odir=odir)
             run_cmd(cmd,log_file=self.get_log_path(),dry_run=self.dry_run)

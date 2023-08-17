@@ -27,7 +27,7 @@ class Pusearch_denoise(base_luigi_task):
         return [luigi.LocalTarget(zotu_rep),luigi.LocalTarget(zotu_mapping)]
     
     def run(self):
-        derep_fa = self.input().path
+        derep_fa = self.input()[0].path
         zotu_rep = self.output()[0].path
         zotu_mapping = self.output()[1].path
         valid_path([zotu_rep], check_ofile=1)
@@ -60,7 +60,14 @@ class usearch_zOTU_table(base_luigi_task):
         odir = join(str(self.odir),"PUSEARCH")
         ofile = join(odir, 'ASV_table.tsv')
         valid_path(ofile, check_ofile=1)
-        return luigi.LocalTarget(ofile)
+        
+        ofiles = list(map(luigi.LocalTarget,
+                          [join(odir,
+                                "rep.relabelled.fasta"),
+                           join(odir,
+                                "ASV_table.tsv"),]
+                          )) 
+        return ofiles
 
     def run(self):
         filtered_fa = self.input()["filtered"].path
