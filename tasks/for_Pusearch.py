@@ -35,7 +35,7 @@ class Pusearch_denoise(base_luigi_task):
         
 
         if self.dry_run:
-            for _o in [self.output()]:
+            for _o in self.output():
                 run_cmd("touch %s" % _o.path, dry_run=False)
         else:
             run_cmd(cmd, dry_run=self.dry_run, log_file=self.get_log_path())
@@ -72,11 +72,11 @@ class usearch_zOTU_table(base_luigi_task):
     def run(self):
         filtered_fa = self.input()["filtered"].path
         zotu_rep_fa = self.input()["zOTU_rep"][0].path.replace('.fasta','.relabelled.fasta')
-        zotu_otu_table = self.output().path
+        zotu_otu_table = self.output()[1].path
         valid_path(zotu_otu_table, check_ofile=1)
         cmd = f"{usearch} -otutab {filtered_fa} -otus {zotu_rep_fa} -otutabout {zotu_otu_table}"
         if self.dry_run:
-            for _o in [self.output()]:
+            for _o in self.output():
                 run_cmd("touch %s" % _o.path, dry_run=False)
         else:
             run_cmd(cmd, dry_run=self.dry_run, log_file=self.get_log_path())
