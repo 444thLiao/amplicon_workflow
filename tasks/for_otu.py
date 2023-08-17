@@ -79,8 +79,7 @@ class vsearch_filter(base_luigi_task):
     def output(self):
         odir = join(str(self.odir),
                     "OTU_pipelines",
-                    "preprocessed",
-                    'QC')
+                    "preprocessed")
         ofile = join(odir,
                      'filtered.fasta')
         valid_path(ofile,check_ofile=1)
@@ -90,8 +89,8 @@ class vsearch_filter(base_luigi_task):
         # cmd = "vsearch --fastx_filter {input} --fastq_maxee 1.0 --fastq_trunclen xx --fastaout {output}".format(input=input,output=output)
         merged_fa = self.input().path
         filtered_fa = self.output().path
-        total_len = int(os.popen(f"grep -c '^+$' {merged_fa}").read().strip())
-        length_dis = [len(_.seq) for _ in SeqIO.parse(merged_fa,'fastq')]
+        # total_len = int(os.popen(f"grep -c '^+$' {merged_fa}").read().strip())
+        # length_dis = [len(_.seq) for _ in SeqIO.parse(merged_fa,'fastq')]
         
         trunclen = self.get_config_params(('vesearch_args','trunclen'))
         valid_path(filtered_fa, check_ofile=1)

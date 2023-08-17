@@ -10,37 +10,14 @@ from toolkit import run_cmd, valid_path
 usearch = soft_db_path.usearch_pth
 
 
-from tasks.for_otu import vsearch_filter
+from tasks.for_otu import vsearch_derep,vsearch_filter
 
-
-
-class Pusearch_derep(base_luigi_task):
-
-    def requires(self):
-        kwargs = self.get_kwargs()
-        return vsearch_filter(**kwargs)
-
-    def output(self):
-        odir = join(str(self.odir), "PUSEARCH",)
-        ofile = join(odir, 'derep.fa')
-        valid_path(ofile, check_ofile=1)
-        return luigi.LocalTarget(ofile)
-
-    def run(self):
-        filtered_fa = self.input().path
-        derep_fa = self.output().path
-        cmd = f"{usearch} -fastx_uniques {filtered_fa} -fastaout {derep_fa} -sizeout"
-        run_cmd(cmd, dry_run=self.dry_run, log_file=self.get_log_path())
-
-        if self.dry_run:
-            for _o in self.output():
-                run_cmd("touch %s" % _o.path, dry_run=False)
 
 ## denoise part
 class Pusearch_denoise(base_luigi_task):
     def requires(self):
         kwargs = self.get_kwargs()
-        return Pusearch_derep(**kwargs)
+        return vsearch_derep(**kwargs)
 
     def output(self):
         odir = join(str(self.odir),"PUSEARCH")
