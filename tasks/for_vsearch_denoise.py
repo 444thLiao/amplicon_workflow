@@ -17,6 +17,7 @@ map_pl = soft_db_path.map_pl_pth
 # num_threads = config.fq_screen_thread
 
 # https://github.com/mooreryan/rhode_island_16s/blob/b2006eeb14a87c6ea09079776271536532e44d3c/scripts/make_asv_table/3_make_asv_table.Rmd
+
 class vsearch_denoise(base_luigi_task):
     def requires(self):
         kwargs = self.get_kwargs()

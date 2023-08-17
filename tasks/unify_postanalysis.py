@@ -14,8 +14,8 @@ class get_tree(base_luigi_task):
         
         
         antype = str(self.analysis_type).lower().split(',')
-        if len(set(antype).intersection(set(["all", "otu", "deblur", "dada2",'usearch','qc','pdada2','pdeblur'])))==0:
-            raise Exception("analysis type must be one of the `all,otu,deblur,dada2,pdada2,pdeblur`")
+        if len(set(antype).intersection(set(["all", "otu", "deblur", "dada2",'usearch','qc','pdada2','pdeblur','pusearch'])))==0:
+            raise Exception("analysis type must be one of the `all,otu,deblur,dada2,pdada2,pdeblur,pusearch`")
         if 'qc' in antype:
             from tasks.for_preprocess import multiqc
             required_tasks["fastqc_before"] = multiqc(status='before',
@@ -42,6 +42,9 @@ class get_tree(base_luigi_task):
             required_tasks["usearch_OTU_rep"] = usearch_OTU(**kwargs)
             required_tasks["usearch_zOTU"] = usearch_zOTU_table(**kwargs)
             required_tasks["usearch_zOTU_rep"] = usearch_denoise(**kwargs)
+        if "pusearch" in antype or  "all" in antype:
+            from tasks.for_Pusearch import usearch_zOTU_table
+            required_tasks["run_Pusearch"] = usearch_zOTU_table(**kwargs)                 
         if "pdada2" in antype or  "all" in antype:
             from tasks.for_Pdada2 import format_Pdada2
             required_tasks["run_Pdada2"] = format_Pdada2(**kwargs)     
