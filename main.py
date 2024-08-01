@@ -41,14 +41,16 @@ class workflow(luigi.Task):
     
     def requires(self):
         from tasks.unify_postanalysis import get_tree
+        from tasks.MC_assignment import get_MC_assignment
         kwargs = dict(odir=get_validate_path(self.odir),
                       tab=get_validate_path(self.tab),
                       dry_run=self.dry_run,
                       log_path=self.log_path,
                       screen=self.screen,
                       config=self.config)
-        return get_tree(analysis_type=self.analysis_type,
-                        **kwargs)
+        
+        return [get_MC_assignment(analysis_type=self.analysis_type,
+                        **kwargs)]
         
     def run(self):
         pass

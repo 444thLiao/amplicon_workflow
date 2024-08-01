@@ -48,7 +48,7 @@ class Pusearch_denoise(base_luigi_task):
                 SeqIO.write(r,f1,'fasta-2line')
 
 
-class usearch_zOTU_table(base_luigi_task):
+class Pusearch_zOTU_table(base_luigi_task):
     def requires(self):
         kwargs = self.get_kwargs()
         required_task = {}
