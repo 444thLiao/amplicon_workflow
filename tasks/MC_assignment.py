@@ -147,6 +147,7 @@ class get_MC_assignment(base_luigi_task):
         target_species = self.get_config_params('target_species')
         outgroup_species = self.get_config_params('outgroup_species')
         ref_genedb = self.get_config_params('ref_genedb')
+
         targets = open(target_species).read().strip().split('\n')
         outgroups = open(outgroup_species).read().strip().split('\n')
         for k, f in self.input().items():
@@ -157,18 +158,23 @@ class get_MC_assignment(base_luigi_task):
             else:
                 ofile = f.path
                 otu_table = ''
-            odir = dirname(ofile)
-            c = anno_repotu(ofile,
+            cmd = anno_repotu(ofile,
                         db='/mnt/home-db/pub/protein_db/swissprot/swissprot',
                         name='negative_swissprot.tbl')
-            if not exists(join(odir,'negative_swissprot.tbl')):
+            if self.dry_run:
+                for _o in [self.output()]:
+                    run_cmd("touch %s" % _o.path, dry_run=False)
+            else:
+                run_cmd(cmd, dry_run=self.dry_run, log_file=self.get_log_path())            
 
-                os.system(c)
-            c = anno_repotu(ofile,
+            cmd = anno_repotu(ofile,
                             db=ref_genedb,
                             name='positive_656G.tbl')
-            if not exists(join(odir,'positive_656G.tbl')):
-                os.system(c)
+            if self.dry_run:
+                for _o in [self.output()]:
+                    run_cmd("touch %s" % _o.path, dry_run=False)
+            else:
+                run_cmd(cmd, dry_run=self.dry_run, log_file=self.get_log_path())       
             get_positive(ofile,targets,outgroups)
             
 
