@@ -144,9 +144,11 @@ class get_MC_assignment(base_luigi_task):
         if self.dry_run:
             pass
 
-        extra_dict = self.get_config_params('MC_assignment')
-        targets = open(extra_dict['target_species']).read().strip().split('\n')
-        outgroups = open(extra_dict['outgroup_species']).read().strip().split('\n')
+        target_species = self.get_config_params('target_species')
+        outgroup_species = self.get_config_params('outgroup_species')
+        ref_genedb = self.get_config_params('ref_genedb')
+        targets = open(target_species).read().strip().split('\n')
+        outgroups = open(outgroup_species).read().strip().split('\n')
         for k, f in self.input().items():
             if k in ['usearch_OTU','usearch_zOTU']:continue
             if type(f) == list:
@@ -162,7 +164,6 @@ class get_MC_assignment(base_luigi_task):
             if not exists(join(odir,'negative_swissprot.tbl')):
 
                 os.system(c)
-            ref_genedb = extra_dict['ref_genedb']
             c = anno_repotu(ofile,
                             db=ref_genedb,
                             name='positive_656G.tbl')
