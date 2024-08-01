@@ -159,12 +159,15 @@ class get_MC_assignment(base_luigi_task):
             c = anno_repotu(ofile,
                         db='/mnt/home-db/pub/protein_db/swissprot/swissprot',
                         name='negative_swissprot.tbl')
-            os.system(c)
+            if not exists(join(odir,'negative_swissprot.tbl')):
+
+                os.system(c)
             ref_genedb = extra_dict['ref_genedb']
             c = anno_repotu(ofile,
                             db=ref_genedb,
                             name='positive_656G.tbl')
-            os.system(c)
+            if not exists(join(odir,'positive_656G.tbl')):
+                os.system(c)
             get_positive(ofile,targets,outgroups)
             
 
