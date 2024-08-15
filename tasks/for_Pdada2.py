@@ -7,6 +7,7 @@ from config import soft_db_path,luigi,run_cmd, valid_path,fileparser
 from tasks.basic_tasks import base_luigi_task
 from tasks.for_preprocess import QC_aft_screened,QC_trimmomatic
 from os.path import *
+
 vsearch = soft_db_path.vsearch_pth
 rdp_gold = soft_db_path.rdp_gold_pth
 map_pl = soft_db_path.map_pl_pth
@@ -67,6 +68,8 @@ class run_Pdada2(base_luigi_task):
 
 class format_Pdada2(base_luigi_task):
     mission = 'Pdada2'
+    get_positive = luigi.BoolParameter(default=False)
+    
     def requires(self):
         kwargs = self.get_kwargs()
         return run_Pdada2(**kwargs)
@@ -84,7 +87,10 @@ class format_Pdada2(base_luigi_task):
                                 "ASV_stats.txt"),
                            join(self.odir,
                                 "%s_output" % self.mission,
-                                "parsed.ok")]
+                                "parsed.ok"),
+                           join(self.odir,
+                                "%s_output" % self.mission,
+                                "Positive_rep.fasta"),]
                           ))
         return ofiles
 
@@ -109,4 +115,6 @@ class format_Pdada2(base_luigi_task):
         status = self.output()[3].path
         with open(status,'w') as f1:
             f1.write('ok')
-        
+
+        if self.get_positive:
+            self.get_positive_seqs(self.output()[0].path)  

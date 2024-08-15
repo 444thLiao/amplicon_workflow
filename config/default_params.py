@@ -118,9 +118,9 @@ dada2_args = dict(
 # usearch part
 maxee = 1.0
 
-ref_genedb = "/mnt/ivy/thliao/project/coral_ruegeria/data_otheramplicons/refgenes/K02621"
-target_species = "/mnt/ivy/thliao/project/coral_ruegeria/data_otheramplicons/refgenes/target_species.txt"
-outgroup_species = "/mnt/ivy/thliao/project/coral_ruegeria/data_otheramplicons/refgenes/outgroup_species.txt"
+ref_genedb = ""
+target_species = ""
+outgroup_species = ""
 
 # Not implement yet
 ## after profiling

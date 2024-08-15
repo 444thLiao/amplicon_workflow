@@ -111,6 +111,7 @@ class usearch_OTU_table(base_luigi_task):
 
 ## denoise part
 class usearch_denoise(base_luigi_task):
+    get_positive = luigi.BoolParameter(default=False)
     def requires(self):
         kwargs = self.get_kwargs()
         return usearch_derep(**kwargs)
@@ -119,8 +120,13 @@ class usearch_denoise(base_luigi_task):
         odir = join(str(self.odir),"USEARCH",'zotu')
         zotu_rep = join(odir, 'zotus.fa')
         zotu_mapping = join(odir, 'unoise3.txt')
+    
         valid_path([zotu_rep,zotu_mapping], check_ofile=1)
-        return [luigi.LocalTarget(zotu_rep),luigi.LocalTarget(zotu_mapping)]
+        if not self.get_positive:
+            return [luigi.LocalTarget(zotu_rep),luigi.LocalTarget(zotu_mapping)]
+        else:
+            positive_rep = join(odir, 'Positive_rep.fasta')
+            return [luigi.LocalTarget(zotu_rep),luigi.LocalTarget(zotu_mapping),luigi.LocalTarget(positive_rep)]
     
     def run(self):
         derep_fa = self.input().path
@@ -129,7 +135,6 @@ class usearch_denoise(base_luigi_task):
         valid_path([zotu_rep], check_ofile=1)
         cmd = f"{usearch} -unoise3 {derep_fa} -zotus {zotu_rep} -tabbedout {zotu_mapping}"
         
-
         if self.dry_run:
             for _o in [self.output()]:
                 run_cmd("touch %s" % _o.path, dry_run=False)
@@ -142,9 +147,14 @@ class usearch_denoise(base_luigi_task):
                 _.name= _.description = ''
             with open(zotu_rep.replace('.fa','.relabelled.fa'),'w') as f1:
                 SeqIO.write(r,f1,'fasta-2line')
+                
+        if self.get_positive:
+            self.get_positive_seqs(self.output()[0].path.replace('.fa','.relabelled.fa'))
 
-
+            
+            
 class usearch_zOTU_table(base_luigi_task):
+    
     def requires(self):
         kwargs = self.get_kwargs()
         required_task = {}

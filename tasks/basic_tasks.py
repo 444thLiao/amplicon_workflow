@@ -1,5 +1,5 @@
 import luigi
-from toolkit import run_cmd
+from toolkit import run_cmd,anno_repotu,get_positive
 from os.path import *
 import os,sys
 
@@ -65,6 +65,38 @@ class base_luigi_task(luigi.Task):
             elif val is not None and val is not False:
                 extra_str += ' --p-%s %s ' % (p.replace('_','-'), val)        
         return extra_str
+    
+    
+    def get_positive_seqs(self,infasta):
+        target_species = self.get_config_params('target_species')
+        outgroup_species = self.get_config_params('outgroup_species')
+        ref_genedb = self.get_config_params('ref_genedb')
+
+        targets = open(target_species).read().strip().split('\n')
+        outgroups = open(outgroup_species).read().strip().split('\n')
+        ofile = realpath(infasta)
+        cmd = anno_repotu(ofile,
+                    db='/mnt/home-db/pub/protein_db/swissprot/swissprot',
+                    name='negative_swissprot.tbl')
+        if self.dry_run:
+            for _o in [self.output()]:
+                run_cmd("touch %s" % _o.path, dry_run=False)
+        else:
+            run_cmd([cmd], dry_run=self.dry_run, log_file=self.get_log_path())            
+
+        cmd = anno_repotu(ofile,
+                          db=ref_genedb,
+                          name='positive_656G.tbl')
+        if self.dry_run:
+            for _o in [self.output()]:
+                run_cmd("touch %s" % _o.path, dry_run=False)
+        else:
+            run_cmd([cmd], dry_run=self.dry_run, log_file=self.get_log_path())       
+        get_positive(ofile,targets,outgroups)
+        
+    def get_MC_assignment():
+        pass
+    
     
 class visulize_seq(base_luigi_task):
     """

@@ -3,7 +3,7 @@ from . import soft_db_path
 from . import default_file_structures
 import luigi
 from tasks.basic_tasks import base_luigi_task
-from toolkit import run_cmd, valid_path,get_validate_path
+from toolkit import run_cmd, valid_path,anno_repotu,get_positive
 from Bio import SeqIO
 import gzip,os
 
