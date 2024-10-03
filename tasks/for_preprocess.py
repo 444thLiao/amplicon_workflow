@@ -126,6 +126,10 @@ class multiqc(base_luigi_task):
 
 
 class QC_trimmomatic(base_luigi_task):
+    """
+    merged trimmomatic and fastp together.
+    fastp can help to remove Ns in fastq files.
+    """
     sampleid = luigi.Parameter()
     odir = luigi.Parameter()
     PE1 = luigi.Parameter()
@@ -153,7 +157,7 @@ class QC_trimmomatic(base_luigi_task):
             return [luigi.LocalTarget(ofile_name1)]
         else:
             return [luigi.LocalTarget(ofile_name1),
-                luigi.LocalTarget(ofile_name2)]
+                    luigi.LocalTarget(ofile_name2)]
 
     def run(self):
         valid_path(self.output()[0].path, check_ofile=1)
@@ -165,23 +169,30 @@ class QC_trimmomatic(base_luigi_task):
         # else:
         input1 = self.PE1
         input2 = self.PE2
-
+        odir = dirname(self.output()[0].path)
+        tmp1 = join(str(odir),
+                           "{}_R1.tmp.fq.gz".format(str(self.sampleid)))
+        tmp2 = join(str(odir),
+                           "{}_R2.tmp.fq.gz".format(str(self.sampleid)))
+        
         if not exists(self.PE2):
-            cmdline = f"java -jar {trimmomatic_jar} SE -threads {self.get_config_params('trimmomatic_thread')} {input1} {self.output()[0].path} ILLUMINACLIP:{trimmomatic_dir}/adapters/TruSeq3-SE.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36"
+            cmdline = f"java -jar {trimmomatic_jar} SE -threads {self.get_config_params('trimmomatic_thread')} {input1} {self.output()[0].path} ILLUMINACLIP:{trimmomatic_dir}/adapters/TruSeq3-SE.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36; "
             
         else:
-            cmdline = "java -jar {trimmomatic_jar} PE -threads {thread} {input1} {input2} {ofile1} {outdir}/{PE1_id}.unpaired.fq.gz {ofile2} {outdir}/{PE2_id}.unpaired.fq.gz ILLUMINACLIP:{trimmomatic_dir}/adapters/TruSeq3-PE.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:50".format(
+            cmdline = "java -jar {trimmomatic_jar} PE -threads {thread} {input1} {input2} {tmp1} {outdir}/{PE1_id}.unpaired.fq.gz {tmp2} {outdir}/{PE2_id}.unpaired.fq.gz ILLUMINACLIP:{trimmomatic_dir}/adapters/TruSeq3-PE.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:50  ;  fastp -i {tmp1} -I {tmp2} -o {ofile1} -O {ofile2} ".format(
             trimmomatic_jar=trimmomatic_jar,
             trimmomatic_dir=trimmomatic_dir,
             input1=input1,
             input2=input2,
             PE1_id=sample_name + "_R1",
             PE2_id=sample_name + "_R2",
+            tmp1=tmp1,
+            tmp2=tmp2,
             ofile1=self.output()[0].path,
             ofile2=self.output()[1].path,
             outdir=dirname(self.output()[0].path),
             thread=self.get_config_params('trimmomatic_thread'))
-        
+
         run_cmd(cmdline,
                 dry_run=self.dry_run,
                 log_file=self.get_log_path())
