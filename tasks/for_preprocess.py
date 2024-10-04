@@ -179,7 +179,7 @@ class QC_trimmomatic(base_luigi_task):
             cmdline = f"java -jar {trimmomatic_jar} SE -threads {self.get_config_params('trimmomatic_thread')} {input1} {self.output()[0].path} ILLUMINACLIP:{trimmomatic_dir}/adapters/TruSeq3-SE.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36; "
             
         else:
-            cmdline = "java -jar {trimmomatic_jar} PE -threads {thread} {input1} {input2} {tmp1} {outdir}/{PE1_id}.unpaired.fq.gz {tmp2} {outdir}/{PE2_id}.unpaired.fq.gz ILLUMINACLIP:{trimmomatic_dir}/adapters/TruSeq3-PE.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:50  ;  fastp -i {tmp1} -I {tmp2} -o {ofile1} -O {ofile2} ".format(
+            cmdline = "java -jar {trimmomatic_jar} PE -threads {thread} {input1} {input2} {tmp1} {outdir}/{PE1_id}.unpaired.fq.gz {tmp2} {outdir}/{PE2_id}.unpaired.fq.gz ILLUMINACLIP:{trimmomatic_dir}/adapters/TruSeq3-PE.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:50  ;  fastp -i {tmp1} -I {tmp2} -o {ofile1} -O {ofile2} -n 1".format(
             trimmomatic_jar=trimmomatic_jar,
             trimmomatic_dir=trimmomatic_dir,
             input1=input1,
