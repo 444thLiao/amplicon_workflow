@@ -1,4 +1,4 @@
-# 16s pipelines based on luigi
+# Amplicon anlaysis pipelines based on luigi
 
 For better handle different pipelines with vsearch/usearch, qiime2-deblur or qiime2-dada2.
 We present a unified pipelines which you could perforom different analysis with **single data_input.tab**
@@ -77,7 +77,7 @@ Following the header and separator of `config.data_input.template`, fulfill a ne
 With this tab, you could run:
 
 ```bash
-python3 ~main.py run -- workflow --tab data_input.tab --odir output_dir --analysis-type otu --workers 4 --log-path output_dir/cmd_log.txt --local-scheduler
+python3 main.py run -- workflow --tab data_input.tab --odir output_dir --analysis-type otu --workers 4 --log-path output_dir/cmd_log.txt --local-scheduler
 ``` 
 
 Besides the params `--tab`, `--odir`, `--analysis-type`, `--log-path`, other params are luigi implemented. 
